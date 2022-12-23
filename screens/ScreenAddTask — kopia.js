@@ -18,7 +18,6 @@ import {styles, pad, toLocaleISOString, getTaskDate,
 export default function ScreenAddTask({navigation}){
 
   const { tasks, taskID } = useSelector(state => state.taskReducer);
-  const { settings } = useSelector(state => state.taskReducer);
   const dispatch = useDispatch();
 
   const [title, setTitle] = useState('');
@@ -134,16 +133,9 @@ async function onCreateTriggerNotification() {
 
   useEffect(() => {
     getTask();
-    if (settings.Language == 1){
-      navigation.setOptions({
-        title: 'Nowe zadanie'
-      });
-    }
-    else{
-      navigation.setOptions({
-        title: 'New Task'
-      });
-    }
+    props.navigation.setOptions({
+      title: 'a',
+    });
   }, [])
 
 // pobierz zadanie
@@ -181,9 +173,7 @@ async function onCreateTriggerNotification() {
         AsyncStorage.setItem('Tasks', JSON.stringify(newTasks))
         .then(() => {
           dispatch(setTasks(newTasks));
-          {settings.Language == 1 ?
-          Alert.alert('Nowe zadanie', title) :
-          Alert.alert('New Task', title)};
+          Alert.alert('Nowe zadanie', title);
           onCreateTriggerNotification()
           navigation.goBack();
         })
@@ -195,7 +185,6 @@ async function onCreateTriggerNotification() {
     }
   }
 
-  /*
   const setTaskRecurring = () => {
       if(title.length == 0){
         Alert.alert('Niepoprawna nazwa','Pole nazwa nie może być puste!');
@@ -237,24 +226,23 @@ async function onCreateTriggerNotification() {
   //Alert.alert('Nowe zadanie', title);
   //navigation.goBack();
 }
-*/
 
   return(
     <View style={styles.container}>
       <StatusBar barStyle = "auto" />
       <ScrollView>
-        <Text style={styles.TaskLabel}>{settings.Language == 1 ? 'Nazwa' : 'Title'}</Text>
+        <Text style={styles.TaskLabel}>Nazwa</Text>
           <TextInput 
             style={styles.InputText}
             value={title}
-            placeholder={settings.Language == 1 ? 'Wpisz nazwę zadania...' : 'Enter task title...'}
+            placeholder='Wpisz nazwę zadania...'
             onChangeText={(value) => setTitle(value)}
           />
-        <Text style={styles.TaskLabel}>{settings.Language == 1 ? 'Opis (opcjonalnie)' : 'Description (optional)'}</Text>
+        <Text style={styles.TaskLabel}>Opis (opcjonalnie)</Text>
           <TextInput 
             style={styles.InputText}
             value={description}
-            placeholder={settings.Language == 1 ? 'Dodaj opis...' : 'Add description...'}
+            placeholder='Dodaj opis...'
             multiline
             onChangeText={(value) => setDescription(value)}
           />
@@ -262,14 +250,168 @@ async function onCreateTriggerNotification() {
           <Checkbox
             style={styles.checkbox} 
             value={isTaskRecc} 
-            onValueChange={setTaskRecc}
+            onValueChange={SetShow}
           />
-        <Text style={styles.TaskLabel}>{settings.Language == 1 ?'  Cykliczne' : '  Reccuring'}</Text>
+        <Text style={styles.TaskLabel}>  Cykliczne</Text>
       </Text>
+      {isTaskRecc ?
+        <View>
+          <View style={styles.DateHour}>
+            <Text style={styles.TaskLabel}>Data rozpoczęcia</Text>
+            <Text style={styles.TaskLabel}>Data zakończenia</Text>
+          </View>
+        <View style={styles.StartEndDatesButton}>
+            {showStartDate ?
+              <View>
+                <TouchableOpacity
+                  onPress={() => setShowStartDate(true)}>
+                  <Text style={styles.DateHourText}>
+                    <FontAwesome5
+                      name='calendar-day'
+                      size={30} /> {pad(new Date(TaskReccStartDate).getDate()) + "/" + pad(new Date(TaskReccStartDate).getMonth() + 1) + "/" + new Date(TaskReccStartDate).getFullYear()}
+                  </Text>
+                </TouchableOpacity>
+                <DateTimePicker
+                  value={new Date(TaskReccStartDate)}
+                  mode={"date"}
+                  minimumDate={Date.now()}
+                  onChange={onStartDateChange} />
+              </View>
+              :
+              <TouchableOpacity
+                onPress={() => setShowStartDate(true)}>
+                <Text style={styles.DateHourText}>
+                  <FontAwesome5
+                    name='calendar-day'
+                    size={30} /> {pad(new Date(TaskReccStartDate).getDate()) + "/" + pad(new Date(TaskReccStartDate).getMonth() + 1) + "/" + new Date(TaskReccStartDate).getFullYear()}
+                </Text>
+              </TouchableOpacity>}
+            {showEndDate ?
+              <View>
+                <TouchableOpacity
+                  onPress={() => setShowEndDate(true)}>
+                  <Text style={styles.DateHourText}>
+                    <FontAwesome5
+                      name='calendar-day'
+                      size={30} /> {pad(new Date(TaskReccEndDate).getDate()) + "/" + pad(new Date(TaskReccEndDate).getMonth() + 1) + "/" + new Date(TaskReccEndDate).getFullYear()}
+                  </Text>
+                </TouchableOpacity>
+                <DateTimePicker
+                  value={new Date(TaskReccEndDate)}
+                  mode={"date"}
+                  minimumDate={new Date(TaskReccStartDate)}
+                  onChange={onEndDateChange} />
+              </View>
+              :
+              <TouchableOpacity
+                onPress={() => setShowEndDate(true)}>
+                <Text style={styles.DateHourText}>
+                  <FontAwesome5
+                    name='calendar-day'
+                    size={30} /> {pad(new Date(TaskReccEndDate).getDate()) + "/" + pad(new Date(TaskReccEndDate).getMonth() + 1) + "/" + new Date(TaskReccEndDate).getFullYear()}
+                </Text>
+              </TouchableOpacity>
+            }
+          </View>
+            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+              <Text style={styles.TaskRepeatLabel}>Powtarzaj </Text>
+                <DropDownPicker
+                  zIndex={5000}
+                  containerStyle={{width: '70%', marginTop: 10}}
+                  open={showRepeat}
+                  value={Repeat}
+                  items={RepeatOptions}
+                  setOpen={setShowRepeat}
+                  setValue={setRepeat}
+                  listMode='SCROLLVIEW'
+                />
+            </View>
+          {Repeat == 2 ?
+            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+              <Text style={styles.TaskRepeatLabel}>Dni </Text>
+                <DropDownPicker
+                  zIndex={4000}
+                  placeholder="Wybierz dni"
+                  containerStyle={{width: '50%', marginTop: 10}}
+                  multiple={true}
+                  open={showDaysRepeat}
+                  value={DaysRepeat}
+                  items={DaysOptions}
+                  setOpen={setShowDaysRepeat}
+                  setValue={setDaysRepeat}
+                  listMode='SCROLLVIEW'
+                />
+            </View>
+          : Repeat == 3 ?
+          <View>
+            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                <Text style={styles.TaskRepeatLabel}>Miesiące </Text>
+                  <DropDownPicker
+                    zIndex={4000}
+                    placeholder="Wybierz miesiące"
+                    containerStyle={{width: '70%', marginTop: 10}}
+                    multiple={true}
+                    open={showMonthsRepeat}
+                    value={MonthsRepeat}
+                    items={MonthsOptions}
+                    setOpen={setShowMonthsRepeat}
+                    setValue={setMonthsRepeat}
+                    listMode='SCROLLVIEW'
+                  />
+              </View>
+              <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                <Text style={styles.TaskRepeatLabel}>Dni </Text>
+                  <DropDownPicker
+                    zIndex={2000}
+                    placeholder="Wybierz dni"
+                    containerStyle={{width: '70%', marginTop: 10}}
+                    multiple={true}
+                    open={showDaysRepeat}
+                    value={DaysRepeat}
+                    items={DaysOptions}
+                    setOpen={setShowDaysRepeat}
+                    setValue={setDaysRepeat}
+                    listMode='SCROLLVIEW'
+                  />
+              </View>
+            </View>
+           : ''
+          }
+          <View style={{flexDirection: 'row', borderBottomWidth: 1}}>
+            <Text style={styles.TaskRepeatLabel}>O godzinie</Text> 
+            {showTime ?
+              <View>
+                <TouchableOpacity 
+                  onPress={() => setShowTime(true)}>
+                    <Text style = {[styles.DateHourText, {marginTop: 7, marginBottom: 10}]}>
+                    <FontAwesome5
+                      name = 'clock'
+                      size = {30} /> {pad(new Date(date).getHours()) + ":" + pad(new Date(date).getMinutes())}
+                    </Text>
+                </TouchableOpacity>
+                  <DateTimePicker
+                    value={new Date(date)}
+                    mode="time"
+                    onChange={onDateChange}     
+                  />
+                </View>
+                  :
+                  <TouchableOpacity 
+                  onPress={() => setShowTime(true)}>
+                    <Text style = {[styles.DateHourText, {marginTop: 7, marginBottom: 10}]}>
+                    <FontAwesome5
+                      name = 'clock'
+                      size = {30} /> {pad(new Date(date).getHours()) + ":" + pad(new Date(date).getMinutes())}
+                    </Text>
+                  </TouchableOpacity>
+            }          
+          </View>
+        </View>
+      :
       <View>
         <View style={styles.DateHour}>
-          <Text style={styles.TaskLabel}>{settings.Language == 1 ? 'Data' : 'Date'}</Text>
-          <Text style={styles.TaskLabel}>{settings.Language == 1 ? 'Godzina' : 'Hour'}</Text>
+          <Text style={styles.TaskLabel}>Data</Text>
+          <Text style={styles.TaskLabel}>Godzina</Text>
         </View>
       <View style={styles.DateHourButton}>
         {showDate ?
@@ -327,7 +469,8 @@ async function onCreateTriggerNotification() {
         }
         </View>
       </View>
-      <Text style={styles.TaskLabel}>{settings.Language == 1 ? 'Priorytet' : 'Priority'}</Text>
+      }
+      <Text style={styles.TaskLabel}>Priorytet</Text>
       <View style={styles.priority_bar}>
         <TouchableOpacity
           style={{flex: 1, backgroundColor: '#60f777', justifyContent: 'center', alignItems: 'center'}}
@@ -367,12 +510,21 @@ async function onCreateTriggerNotification() {
         </TouchableOpacity>
       </View>
       <View style={styles.Buttons}>
+      {isTaskRecc === false ? 
         <TouchableOpacity 
           style={styles.EditTask}
           onPress={setTask}
           >
-          <Text style={styles.ButtonAdd}>{settings.Language == 1 ? 'Dodaj' : 'Add'}</Text>
+          <Text style={styles.ButtonAdd}>Dodaj</Text>
         </TouchableOpacity>
+        :
+        <TouchableOpacity 
+          style={styles.EditTask}
+          onPress={setTaskRecurring}
+          >
+          <Text style={styles.ButtonAdd}>Dodaj</Text>
+        </TouchableOpacity>
+        }
       </View>
       </ScrollView>
   </View>

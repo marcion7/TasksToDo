@@ -1,38 +1,118 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, Pressable, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, Image } from 'react-native';
 import ToggleSwitch from 'toggle-switch-react-native';
-
+import DropDownPicker from 'react-native-dropdown-picker';
+import { useDispatch, useSelector } from 'react-redux';
+import { setSettings } from '../redux/actions';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import {styles} from './ScreenEditTask';
+
 export default function ScreenSettings(){
+  
+  const { settings } = useSelector(state => state.taskReducer);
+  const dispatch = useDispatch();
 
-  const [value, setValue] = useState('uk');
+  const [darkMode, setDarkMode] = useState(false);
 
-  const [theme, dark] = useState(false);
+  const [language, setLanguage] = useState(1);
+  const [showlanguage, setShowLanguage] = useState(false);
 
-  const [selected, setSelected] = useState("");
-  const data = [
-    {key:'1',value:'24'},
-    {key:'2',value:'12'}
-  ];
+  useEffect(() => {
+    getSettings();
+  }, [])
+
+// pobierz zadanie
+const getSettings = async () => {
+  const Settings = await AsyncStorage.getItem('Settings')
+  const parsedSettings = JSON.parse(Settings)
+  if(parsedSettings){
+    setSettings(parsedSettings);
+    setDarkMode(parsedSettings.DarkMode);
+    setLanguage(parsedSettings.Language);
+  }
+}
 
   const changeTheme = () => {
-    dark(current => !current);
+    setDarkMode(current => !current);
   };
+
+  const LanguageOptions = [
+    {
+      label: 'PL',
+      value: 1,
+      icon: () => <Image source={require('../Icons/pl.png')} style={styles.iconStyle} />
+    },
+    {
+      label: 'EN',
+      value: 2,
+      icon: () => <Image source={require('../Icons/en.png')} style={styles.iconStyle} />
+    },
+    ]
+
+    /*
+    const getData = async () => {
+      try {
+        const jsonValue = await AsyncStorage.getItem('Settings')
+        const val = JSON.parse(jsonValue);
+        console.log(val);
+      } catch(e) {
+        console.log(error);
+      }
+    }
+    */
+
+    const setSetting = () => {
+      try{
+        var Settings = {
+          DarkMode: darkMode,
+          Language: language,
+        }
+        AsyncStorage.setItem('Settings', JSON.stringify(Settings))
+        .then(() => {
+          dispatch(setSettings(Settings));
+        })
+        .catch(err => console.log(err))
+      }
+      catch(error){
+        console.log(error);
+      }
+    }
    
     return(
-    <View style={theme == false ? styles.container : styles.containerDark}>
+    <View style={settings.DarkMode == false ? styles.container : styles.containerDark}>
       <Text style={stylesSettings.Header}>Ustawienia</Text>
-      <View style={stylesSettings.Theme}>
-      <ToggleSwitch
-        isOn={theme}
-        onColor="blue"
-        offColor="black"
-        label="Motyw Ciemny"
-        size='large'
-        labelStyle={{ fontSize: 25 }}
-        onToggle={changeTheme}
-      />
+        <View style={stylesSettings.Theme}>
+          <ToggleSwitch
+            isOn={darkMode}
+            onColor="blue"
+            offColor={darkMode == false ? 'grey' : 'black'}
+            label={settings.Language == 1 ? "Motyw Ciemny" : "Dark Mode"}
+            size='large'
+            labelStyle={{ fontSize: 25, color: settings.DarkMode==false ? 'black' : 'white' }}
+            onToggle={changeTheme}
+            //onToggle={() => { changeTheme(); setSetting();}}
+          />
+          <View style={{flexDirection: 'row', alignItems: 'center'}}>
+            <Text style={{fontSize: 25, marginTop: 10, marginRight: 10, color: settings.DarkMode==false ? 'black' : 'white'  }}>{settings.Language == 1 ? "Język" : "Language"}</Text>
+            <DropDownPicker
+              containerStyle={{width: '26%', marginTop: 10}}
+              open={showlanguage}
+              value={language}
+              items={LanguageOptions}
+              setOpen={setShowLanguage}
+              setValue={setLanguage}
+              theme={settings.DarkMode == false ? "LIGHT" : "DARK"}
+            />
+          </View>
+          <View style={styles.Buttons}>
+            <TouchableOpacity 
+              style={styles.EditTask}
+              onPress={darkMode != settings.DarkMode || language != settings.Language ? setSetting : null}
+              >
+              <Text style={styles.ButtonAdd}>{settings.Language == 1 ? 'Zapisz' : 'Save'}</Text>
+            </TouchableOpacity>
+      </View>
       </View>
     </View>
     )
@@ -51,7 +131,14 @@ export default function ScreenSettings(){
       fontSize: 20,
       fontFace: 'tahoma',
       padding: 15,
-      fontWeight: '500'
+      fontWeight: '500',
+    },
+    TaskRepeatLabel: {
+      fontWeight: 'bold',
+      fontSize: 20,
+      marginTop: 10,
+      marginLeft: 10,
+      width: '25%'
     },
     Theme: {
       fontSize: 20,
@@ -62,6 +149,7 @@ export default function ScreenSettings(){
       fontSize: 25,
       marginTop: 20,
       alignItems: 'center',
+
     }
   });
   

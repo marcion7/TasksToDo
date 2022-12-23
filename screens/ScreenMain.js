@@ -53,14 +53,10 @@ export const setNextID = (array) => {
   return id;
 }
 
-//export var days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-//export var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
- export var days = ['Niedziela','Poniedziałek','Wtorek','Środa','Czwartek','Piątek','Sobota'];
- export var months = ['Styczeń','Luty','Marzec','Kwiecień','Maj','Czerwiec','Lipiec','Sierpień','Wrzesień','Październik','Listopad','Grudzień'];
-
 export default function ScreenMain( {navigation} ){
 
   const { tasks, taskID } = useSelector(state => state.taskReducer);
+  const { settings } = useSelector(state => state.taskReducer);
   const dispatch = useDispatch();
 
   const [showFilters, setShowFilters] = useState(false);
@@ -77,6 +73,15 @@ export default function ScreenMain( {navigation} ){
     getTasks();
 }, 60 * 1000); // 60 * 1000 milsec
 */
+
+if (settings.Language == 1){
+  var days = ['Niedziela','Poniedziałek','Wtorek','Środa','Czwartek','Piątek','Sobota'];
+  var months = ['Styczeń','Luty','Marzec','Kwiecień','Maj','Czerwiec','Lipiec','Sierpień','Wrzesień','Październik','Listopad','Grudzień'];
+}
+else{
+  var days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];   
+}
 
 // pobierz zadania
 const getTasks = () => {
@@ -179,32 +184,32 @@ for (let i = 0; i < filteredTasks.length; i++){
     return(
     <View style={styles.container}>
       <StatusBar barStyle = "auto" />
-      <Text style={styles.Header}>Lista zadań</Text>
+      <Text style={styles.Header}>{settings.Language == 1 ? 'Lista zadań' : 'Tasks List'}</Text>
         <View style={{ height: "91%" }}>
           <View style={[styles.taskDateFilter_bar, {display: showFilters==false ? 'none' : 'flex'}]}>
             <TouchableOpacity
                 style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: TasksDateFilterIndex==0 ? '#01632a' : '#060554'}}
                 onPress={() => {setTasksDateFilterIndex(0)}}
             >
-            <Text style={styles.TaskDateFilterText}>Wszystkie</Text>
+            <Text style={styles.TaskDateFilterText}>{settings.Language == 1 ? 'Wszystkie' : 'All'}</Text>
             </TouchableOpacity>
             
             <TouchableOpacity
                 style={{flex: 1, justifyContent: 'center', alignItems: 'center', borderLeftWidth: 1, borderRightWidth: 1, backgroundColor: TasksDateFilterIndex==1 ? '#01632a' : '#060554'}}
                 onPress={() => {setTasksDateFilterIndex(1)}}
             >
-            <Text style={styles.TaskDateFilterText}>Aktualne</Text>
+            <Text style={styles.TaskDateFilterText}>{settings.Language == 1 ? 'Aktualne' : 'Current'}</Text>
             </TouchableOpacity>
             
             <TouchableOpacity
                 style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: TasksDateFilterIndex==2 ? '#01632a' : '#060554'}}
                 onPress={() => {setTasksDateFilterIndex(2)}}
             >
-            <Text style={styles.TaskDateFilterText}>Archiwalne</Text>
+            <Text style={styles.TaskDateFilterText}>{settings.Language == 1 ? 'Archiwalne' : 'Archival'}</Text>
             </TouchableOpacity>
           </View>
           <View style={{backgroundColor: '#03368a', flexDirection: 'row', display: showFilters==false ? 'none' : 'flex'}}>
-            <Text style={styles.filterText}>Priorytet</Text>
+            <Text style={styles.filterText}>{settings.Language == 1 ? 'Priorytet' : 'Priority'}</Text>
               <Picker
                 selectedValue={FilterPriority}
                 onValueChange={(itemValue, itemIndex) =>
@@ -214,14 +219,14 @@ for (let i = 0; i < filteredTasks.length; i++){
                 style={{minWidth: '75%', color: 'white'}}
                 dropdownIconColor = 'white'
                 >
-                <Picker.Item label= 'Wszystkie' value='' />
-                <Picker.Item label= 'Niski' value={1} />
-                <Picker.Item label= 'Średni' value={2} />
-                <Picker.Item label= 'Wysoki' value={3} />
+                <Picker.Item label= {settings.Language == 1 ? 'Wszystkie' : 'All'} value='' />
+                <Picker.Item label= {settings.Language == 1 ? 'Niski' : 'Low'} value={1} />
+                <Picker.Item label= {settings.Language == 1 ? 'Średni' : 'Medium'} value={2} />
+                <Picker.Item label= {settings.Language == 1 ? 'Wysoki' : 'High'} value={3} />
               </Picker>
           </View>
           <View style={{backgroundColor: '#03368a', flexDirection: 'row', display: showFilters==false ? 'none' : 'flex'}}>
-            <Text style={styles.filterText}>Stan</Text> 
+            <Text style={styles.filterText}>Status</Text> 
               <Picker
                 selectedValue={FilterDone}
                 onValueChange={(itemValue, itemIndex) =>
@@ -231,14 +236,14 @@ for (let i = 0; i < filteredTasks.length; i++){
                 style={{minWidth: '75%', color: 'white'}}
                 dropdownIconColor = 'white'
                 >
-                <Picker.Item label= 'Wszystkie' value='' />
-                <Picker.Item label= 'Nieukończone' value={false} />
-                <Picker.Item label= 'Ukończone' value={true} />
+                <Picker.Item label= {settings.Language == 1 ? 'Wszystkie' : 'All'} value='' />
+                <Picker.Item label= {settings.Language == 1 ?'Nieukończone' : 'Undone'} value={false} />
+                <Picker.Item label= {settings.Language == 1 ? 'Ukończone' : 'Done'} value={true} />
               </Picker>
           </View>
             <View>
               <TouchableOpacity style={{backgroundColor: '#060554', alignItems: 'center'}} onPress={() => setShowFilters(!showFilters)}>
-                <Text style={{color: 'white'}}>FILTRUJ {showFilters == true ? <FontAwesome5
+                <Text style={{color: 'white'}}>{settings.Language == 1 ? 'FILTRUJ' : 'FILTER'} {showFilters == true ? <FontAwesome5
                         name = 'caret-up'
                         size = {20}
                         color = 'white'   
@@ -253,9 +258,9 @@ for (let i = 0; i < filteredTasks.length; i++){
               </TouchableOpacity>
             </View>
         {filteredTasks.length == 0 ?
-          <Text style={styles.Listazad}>Lista zadań jest pusta</Text>
+          <Text style={styles.Listazad}>{settings.Language == 1 ? 'Lista zadań jest pusta' : 'Tasks list is empty'}</Text>
         : setSelectedTasks(TasksDateFilterIndex).length == 0 ?
-          <Text style={styles.Listazad}>Brak zadań o podanych kryteriach</Text>
+          <Text style={styles.Listazad}>{settings.Language == 1 ? 'Brak zadań o podanych kryteriach' : 'There are no tasks with the given criteria'}</Text>
         :
         <SectionList
           renderSectionHeader={ ( {section} ) => (

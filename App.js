@@ -1,6 +1,8 @@
-import React from 'react';
-import { Provider } from 'react-redux';
+import React, { useEffect } from 'react';
+import { Provider, useSelector } from 'react-redux';
 import { Store } from './redux/store';
+
+import { setSettings } from './redux/actions';
 
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -14,9 +16,14 @@ import ScreenSettings from './screens/ScreenSettings';
 import ScreenAddTask from './screens/ScreenAddTask';
 import ScreenEditTask from './screens/ScreenEditTask';
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 const Tab = createBottomTabNavigator();
 
 function BottomTabs() {
+
+  const { settings } = useSelector(state => state.taskReducer);
+
   return (
     <Tab.Navigator
           screenOptions={({ route }) => ({
@@ -28,15 +35,15 @@ function BottomTabs() {
             
             tabBarIcon: ({ focused, size, color }) => {
               let iconName;
-              if(route.name === 'Lista zadań') {
+              if(route.name === 'Lista zadań' || route.name === 'Tasks List') {
                 iconName = 'clipboard-list';
                 size = focused? 25: 20;
               } 
-              else if(route.name === 'Kalendarz') {
+              else if(route.name === 'Kalendarz' || route.name === 'Calendar') {
                 iconName = 'calendar-alt';
                 size = focused? 25: 20;
               }
-              else if(route.name === 'Ustawienia') {
+              else if(route.name === 'Ustawienia' || route.name === 'Settings') {
                 iconName = 'cog';
                 size = focused? 25: 20;
               }
@@ -51,30 +58,34 @@ function BottomTabs() {
           })}
       >
         <Tab.Screen
-          name="Lista zadań"
+          name={settings.Language == 1 ? "Lista zadań" : "Tasks List"}
           component={ScreenMain}
           options={{
             header: () => null
           }}>
         </Tab.Screen>
         <Tab.Screen
-          name="Kalendarz"
+          name={settings.Language == 1 ? "Kalendarz" : "Calendar"}
           component={ScreenCalendar}
           options={{
             header: () => null
           }}>
         </Tab.Screen>
         <Tab.Screen
-          name="Ustawienia"
+          name={settings.Language == 1 ? "Ustawienia" : "Settings"}
           component={ScreenSettings}
           options={{
             header: () => null
           }}>
         </Tab.Screen>
       </Tab.Navigator>
-  );}
+  );
+}
 
 const Stack = createNativeStackNavigator();
+
+const Settings = AsyncStorage.getItem('Settings');
+
 
 function App() {
 
@@ -90,10 +101,9 @@ function App() {
           }}
         />
           <Stack.Screen
-          name="AddTasks"
+          name='AddTasks'
           component={ScreenAddTask}
           options={{
-            title: 'Nowe zadanie',
             headerStyle: {
               backgroundColor: '#0b146b',
               fontFace: 'tahoma'
@@ -105,10 +115,9 @@ function App() {
           }}
         />
         <Stack.Screen
-          name="EditTasks"
+          name='EditTasks'
           component={ScreenEditTask}
           options={{
-            title: 'Edytuj zadanie',
             headerStyle: {
               backgroundColor: '#0b146b',
               fontFace: 'tahoma'

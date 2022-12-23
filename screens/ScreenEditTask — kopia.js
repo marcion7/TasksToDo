@@ -100,57 +100,6 @@ export const MonthsOptions = [
 }
 ]
 
-export const MonthsOptionsEN = [
-  {
-    label: 'January',
-    value: 1,
-  },
-  {
-    label: 'February',
-    value: 2,
-  },
-  {
-    label: 'March',
-    value: 3,
-  },
-  {
-    label: 'April',
-    value: 4,
-  },
-  {
-    label: 'May',
-    value: 5,
-  },
-  {
-    label: 'June',
-    value: 6,
-  },
-  {
-    label: 'July',
-    value: 7,
-  },
-  {
-    label: 'August',
-    value: 8,
-  },
-  {
-    label: 'September',
-    value: 9,
-  },
-  {
-    label: 'October',
-    value: 10,
-  },
-  {
-    label: 'November',
-    value: 11,
-  },
-  {
-    label: 'December',
-    value: 12,
-  }
-  ]
-
 export const DaysOptions = [
 {
   label: 'Poniedziałek',
@@ -182,37 +131,6 @@ export const DaysOptions = [
 },
 ]
 
-export const DaysOptionsEN = [
-  {
-    label: 'Monday',
-    value: 1,
-  },
-  {
-    label: 'Tuesday',
-    value: 2,
-  },
-  {
-    label: 'Wednesday',
-    value: 3,
-  },
-  {
-    label: 'Thursday',
-    value: 4,
-  },
-  {
-    label: 'Friday',
-    value: 5,
-  },
-  {
-    label: 'Saturday',
-    value: 6,
-  },
-  {
-    label: 'Sunday',
-    value: 7,
-  },
-]
-
 export default function ScreenEditTask({navigation}){
 
   const [title, setTitle] = useState('');
@@ -225,7 +143,6 @@ export default function ScreenEditTask({navigation}){
   const [date, setTaskDate] = useState(new Date());
   const [showDate, setShowDate] = useState(false);
   const [showTime, setShowTime] = useState(false);
-  const [showNotification, setShowNotification] = useState(true);
 
   const [TaskReccStartDate, setTaskStartDate] = useState(new Date());
   const [showStartDate, setShowStartDate] = useState(false);
@@ -246,13 +163,12 @@ export default function ScreenEditTask({navigation}){
   const [DaysRepeatValue, setDaysRepeatOptions] = useState(DaysOptions);
 
   const { tasks, taskID } = useSelector(state => state.taskReducer);
-  const { settings } = useSelector(state => state.taskReducer);
   const dispatch = useDispatch();
 
 // zaplanuj powiadomienie
 async function onCreateTriggerNotification() {
 
-  if (showNotification == false) {
+  if (showAutostartPermisson == false) {
     const trigger: TimestampTrigger = {
       type: TriggerType.TIMESTAMP,
       timestamp: date.getTime(),
@@ -269,7 +185,7 @@ async function onCreateTriggerNotification() {
         },
         {
           text: "NIE POKAZUJ PONOWNIE",
-          onPress: () => {setShowNotification(false)},
+          onPress: () => {setAutostartPermisson(false)},
           style: "cancel"
         },
         { text: "ANULUJ" }
@@ -340,16 +256,6 @@ async function onCreateTriggerNotification() {
 
   useEffect(() => {
     getTask();
-    if (settings.Language == 1){
-      navigation.setOptions({
-        title: 'Edytuj zadanie'
-      });
-    }
-    else{
-      navigation.setOptions({
-        title: 'Edit Task'
-      });
-    }
   }, [])
 
   // alert o usuwaniu zadania
@@ -369,13 +275,13 @@ Alert.alert(
 
 // usuń zadanie
 const deleteTask = (id) => {
-  const filteredTasks = tasks.filter(task => task.ID !== id);
-  AsyncStorage.setItem('Tasks', JSON.stringify(filteredTasks))
-    .then(() =>{
-      dispatch(setTasks(filteredTasks));
-      onDeleteNotification(taskID.toString())
-    })
-    .catch(err => console.log(err))
+const filteredTasks = tasks.filter(task => task.ID !== id);
+AsyncStorage.setItem('Tasks', JSON.stringify(filteredTasks))
+  .then(() =>{
+    dispatch(setTasks(filteredTasks));
+    onDeleteNotification(taskID.toString())
+  })
+  .catch(err => console.log(err))
 }
 
   // pobierz zadanie
@@ -427,9 +333,7 @@ const deleteTask = (id) => {
           AsyncStorage.setItem('Tasks', JSON.stringify(newTasks))
           .then(() => {
                 dispatch(setTasks(newTasks));
-                {settings.Language == 1 ?
-                  Alert.alert('Edytowano zadanie', title) :
-                  Alert.alert('Task has been edited', title)};
+                Alert.alert('Edytowano zadanie', title);
                 if (done === false)
                   onCreateTriggerNotification()
                 else
@@ -477,20 +381,20 @@ const deleteTask = (id) => {
             value={done} 
             onValueChange={setDone}
           />
-          <Text style={styles.TaskLabel}>{settings.Language == 1 ? '  Wykonane' : '  Done'}</Text>
+          <Text style={styles.TaskLabel}>  Wykonane</Text>
         </Text>
-        <Text style={styles.TaskLabel}>{settings.Language == 1 ? 'Nazwa' : 'Title'}</Text>
+        <Text style={styles.TaskLabel}>Nazwa</Text>
           <TextInput 
             style={styles.InputText}
             value={title}
-            placeholder={settings.Language == 1 ? 'Wpisz nazwę zadania...' : 'Enter task title...'}
+            placeholder='Wpisz nazwę zadania...'
             onChangeText={(value) => setTitle(value)}
           />
-        <Text style={styles.TaskLabel}>{settings.Language == 1 ? 'Opis (opcjonalnie)' : 'Description (optional)'}</Text>
+        <Text style={styles.TaskLabel}>Opis (opcjonalnie)</Text>
           <TextInput 
             style={styles.InputText}
             value={description}
-            placeholder={settings.Language == 1 ? 'Dodaj opis...' : 'Add description...'}
+            placeholder='Dodaj opis...'
             multiline
             onChangeText={(value) => setDescription(value)}
             />
@@ -498,14 +402,216 @@ const deleteTask = (id) => {
           <Checkbox
             style={styles.checkbox} 
             value={isTaskRecc} 
-            onValueChange={setTaskRecc}
+            onValueChange={SetShow}
           />
-          <Text style={styles.TaskLabel}>{settings.Language == 1 ?'  Cykliczne' : '  Reccuring'}</Text>
+          <Text style={styles.TaskLabel}>  Cykliczne</Text>
         </Text>
+      {isTaskRecc ?
+        <View>
+          <View style={styles.DateHour}>
+            <Text style={styles.TaskLabel}>Data rozpoczęcia</Text>
+            <Text style={styles.TaskLabel}>Data zakończenia</Text>
+          </View>
+        <View style={styles.StartEndDatesButton}>
+            {showStartDate ?
+              <View>
+                <TouchableOpacity
+                  onPress={() => setShowStartDate(true)}>
+                  <Text style={styles.DateHourText}>
+                    <FontAwesome5
+                      name='calendar-day'
+                      size={30} /> {pad(new Date(TaskReccStartDate).getDate()) + "/" + pad(new Date(TaskReccStartDate).getMonth() + 1) + "/" + new Date(TaskReccStartDate).getFullYear()}
+                  </Text>
+                </TouchableOpacity>
+                <DateTimePicker
+                  value={new Date(TaskReccStartDate)}
+                  mode={"date"}
+                  minimumDate={Date.now()}
+                  onChange={onStartDateChange}
+                />
+              </View>
+              :
+              <TouchableOpacity
+                onPress={() => setShowStartDate(true)}>
+                <Text style={styles.DateHourText}>
+                  <FontAwesome5
+                    name='calendar-day'
+                    size={30} /> {pad(new Date(TaskReccStartDate).getDate()) + "/" + pad(new Date(TaskReccStartDate).getMonth() + 1) + "/" + new Date(TaskReccStartDate).getFullYear()}
+                </Text>
+              </TouchableOpacity>}
+            {showEndDate ?
+              <View>
+                <TouchableOpacity
+                  onPress={() => setShowEndDate(true)}>
+                  <Text style={styles.DateHourText}>
+                    <FontAwesome5
+                      name='calendar-day'
+                      size={30} /> {pad(new Date(TaskReccEndDate).getDate()) + "/" + pad(new Date(TaskReccEndDate).getMonth() + 1) + "/" + new Date(TaskReccEndDate).getFullYear()}
+                  </Text>
+                </TouchableOpacity>
+                <DateTimePicker
+                  value={new Date(TaskReccEndDate)}
+                  mode={"date"}
+                  minimumDate={new Date(TaskReccStartDate)}
+                  onChange={onEndDateChange} />
+              </View>
+              :
+              <TouchableOpacity
+                onPress={() => setShowEndDate(true)}>
+                <Text style={styles.DateHourText}>
+                  <FontAwesome5
+                    name='calendar-day'
+                    size={30} /> {pad(new Date(TaskReccEndDate).getDate()) + "/" + pad(new Date(TaskReccEndDate).getMonth() + 1) + "/" + new Date(TaskReccEndDate).getFullYear()}
+                </Text>
+              </TouchableOpacity>
+            }
+          </View>
+            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+              <Text style={styles.TaskRepeatLabel}>Powtarzaj </Text>
+                <DropDownPicker
+                  zIndex={5000}
+                  placeholder="Wybierz opcje powtarzania"
+                  containerStyle={{width: '70%', marginTop: 10}}
+                  open={showRepeat}
+                  value={Repeat}
+                  items={RepeatOptions}
+                  setOpen={setShowRepeat}
+                  setValue={setRepeat}
+                  listMode='SCROLLVIEW'
+                />
+            </View>
+          {Repeat == 2 ?
+            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+              <Text style={styles.TaskRepeatLabel}>Dni </Text>
+                <DropDownPicker
+                  zIndex={4000}
+                  placeholder="Wybierz dni"
+                  containerStyle={{width: '50%', marginTop: 10}}
+                  multiple={true}
+                  open={showDaysRepeat}
+                  value={DaysRepeat}
+                  items={DaysOptions}
+                  setOpen={setShowDaysRepeat}
+                  setValue={setDaysRepeat}
+                  listMode='SCROLLVIEW'
+                />
+            </View>
+          : Repeat == 3 ?
+            <View>
+              <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                <Text style={styles.TaskRepeatLabel}>Tygodnie </Text>
+                  <DropDownPicker
+                    zIndex={4000}
+                    placeholder="Wybierz tygodnie"
+                    containerStyle={{width: '70%', marginTop: 10}}
+                    open={showWeekRepeat}
+                    value={WeekRepeat}
+                    items={WeekOptions}
+                    setOpen={setShowWeekRepeat}
+                    setValue={setWeekRepeat}
+                    listMode='SCROLLVIEW'
+                  />
+              </View>
+              <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                <Text style={styles.TaskRepeatLabel}>Dni </Text>
+                  <DropDownPicker
+                    zIndex={3000}
+                    placeholder="Wybierz dni"
+                    containerStyle={{width: '70%', marginTop: 10}}
+                    multiple={true}
+                    open={showDaysRepeat}
+                    value={DaysRepeat}
+                    items={DaysOptions}
+                    setOpen={setShowDaysRepeat}
+                    setValue={setDaysRepeat}
+                    listMode='SCROLLVIEW'
+                  />
+              </View>
+            </View>
+          : Repeat == 4 ?
+          <View>
+            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                <Text style={styles.TaskRepeatLabel}>Miesiące </Text>
+                  <DropDownPicker
+                    zIndex={4000}
+                    placeholder="Wybierz miesiące"
+                    containerStyle={{width: '70%', marginTop: 10}}
+                    multiple={true}
+                    open={showMonthsRepeat}
+                    value={MonthsRepeat}
+                    items={MonthsOptions}
+                    setOpen={setShowMonthsRepeat}
+                    setValue={setMonthsRepeat}
+                    listMode='SCROLLVIEW'
+                  />
+            </View>
+              <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                <Text style={styles.TaskRepeatLabel}>Tygodnie </Text>
+                  <DropDownPicker
+                    zIndex={3000}
+                    placeholder="Wybierz tygodnie"
+                    containerStyle={{width: '70%', marginTop: 10}}
+                    open={showWeekRepeat}
+                    value={WeekRepeat}
+                    items={WeekOptions}
+                    setOpen={setShowWeekRepeat}
+                    setValue={setWeekRepeat}
+                    listMode='SCROLLVIEW'
+                  />
+              </View>
+              <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                <Text style={styles.TaskRepeatLabel}>Dni </Text>
+                <DropDownPicker
+                  zIndex={2000}
+                  placeholder="Wybierz dni"
+                  containerStyle={{width: '70%', marginTop: 10}}
+                  multiple={true}
+                  open={showDaysRepeat}
+                  value={DaysRepeat}
+                  items={DaysOptions}
+                  setOpen={setShowDaysRepeat}
+                  setValue={setDaysRepeat}
+                  listMode='SCROLLVIEW'
+                />
+              </View>
+            </View>
+           : ''
+          }
+          <View style={{flexDirection: 'row', borderBottomWidth: 1}}>
+            <Text style={styles.TaskRepeatLabel}>O godzinie</Text> 
+            {showTime ?
+              <View>
+                <TouchableOpacity 
+                  onPress={() => setShowTime(true)}>
+                    <Text style = {[styles.DateHourText, {marginTop: 7, marginBottom: 10}]}>
+                    <FontAwesome5
+                      name = 'clock'
+                      size = {30} /> {pad(new Date(date).getHours()) + ":" + pad(new Date(date).getMinutes())}
+                    </Text>
+                </TouchableOpacity>
+                  <DateTimePicker
+                    value={new Date(date)}
+                    mode="time"
+                    onChange={onDateChange}     
+                  />
+                </View>
+                  :
+                  <TouchableOpacity 
+                  onPress={() => setShowTime(true)}>
+                    <Text style = {[styles.DateHourText, {marginTop: 7, marginBottom: 10}]}>
+                    <FontAwesome5
+                      name = 'clock'
+                      size = {30} /> {pad(new Date(date).getHours()) + ":" + pad(new Date(date).getMinutes())}
+                    </Text>
+                  </TouchableOpacity>
+            }          
+          </View>
+        </View>
+      :
       <View>
         <View style={styles.DateHour}>
-          <Text style={styles.TaskLabel}>{settings.Language == 1 ? 'Data' : 'Date'}</Text>
-          <Text style={styles.TaskLabel}>{settings.Language == 1 ? 'Godzina' : 'Hour'}</Text>
+          <Text style={styles.TaskLabel}>Data</Text>
+          <Text style={styles.TaskLabel}>Godzina</Text>
         </View>
       <View style={styles.DateHourButton}>
         {showDate ?
@@ -563,7 +669,8 @@ const deleteTask = (id) => {
         }
         </View>
       </View>
-      <Text style={styles.TaskLabel}>{settings.Language == 1 ? 'Priorytet' : 'Priority'}</Text>
+      }
+      <Text style={styles.TaskLabel}>Priorytet</Text>
       <View style={styles.priority_bar}>
         <TouchableOpacity
           style={{flex: 1, backgroundColor: '#60f777', justifyContent: 'center', alignItems: 'center'}}
@@ -607,13 +714,13 @@ const deleteTask = (id) => {
           style={styles.EditTask}
           onPress={setTask}
           >
-          <Text style={styles.ButtonAdd}>{settings.Language == 1 ? 'Edytuj' : 'Edit'}</Text>
+          <Text style={styles.ButtonAdd}>Edytuj</Text>
         </TouchableOpacity>
         <TouchableOpacity 
           style={styles.DeleteTask}
           onPress={() => showConfirmDialog( taskID, title )}
           >
-          <Text style={styles.ButtonAdd}>{settings.Language == 1 ? 'Usuń' : 'Delete'}</Text>
+          <Text style={styles.ButtonAdd}>Usuń</Text>
         </TouchableOpacity>
       </View>
       </ScrollView>
@@ -726,9 +833,5 @@ const deleteTask = (id) => {
       borderRadius: 10,
       borderColor: '#555555',
       marginVertical: '3%'
-    },
-    iconStyle: {
-      width: 20,
-      height: 15
     }
   });

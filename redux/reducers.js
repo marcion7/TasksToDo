@@ -1,8 +1,9 @@
-import { SET_TASKS, SET_TASK_ID } from "./actions";
+import { SET_TASKS, SET_TASK_ID, SET_SETTINGS } from "./actions";
 
 const initialState = {
     tasks: [],
     taskID: 1,
+    settings: {darkMode: false, language: 1}
 }
 
 function taskReducer(state = initialState, action){
@@ -10,7 +11,9 @@ function taskReducer(state = initialState, action){
         case SET_TASKS:
             return{...state, tasks: action.payload};
         case SET_TASK_ID:
-            return{...state, taskID: action.payload};  
+            return{...state, taskID: action.payload};
+        case SET_SETTINGS:
+            return{...state, settings: action.payload};       
         default:
             return state;
     }

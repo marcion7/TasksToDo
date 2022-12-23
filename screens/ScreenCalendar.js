@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { Text, View, TouchableOpacity, StatusBar, Alert, SectionList, YellowBox} from 'react-native';
+import { Text, View, TouchableOpacity, StatusBar, Alert, SectionList} from 'react-native';
 import {Calendar, LocaleConfig} from 'react-native-calendars';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useDispatch, useSelector } from 'react-redux';
 import { setTaskID, setTasks, groupBy } from '../redux/actions';
 import * as Progress from 'react-native-progress';
-import {days, months, isWhatPercentOf, countDoneTasks, styles, onDeleteNotification} from './ScreenMain';
+import {isWhatPercentOf, countDoneTasks, styles, onDeleteNotification} from './ScreenMain';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 
 export default function ScreenCalendar({ navigation }){
 
-  const { tasks, taskID } = useSelector(state => state.taskReducer);
+  const { tasks } = useSelector(state => state.taskReducer);
+  const { settings } = useSelector(state => state.taskReducer);
   const dispatch = useDispatch();
   const [selectedDay, setSelectedDay] = useState(new Date().toISOString().slice(0,10));
 
@@ -27,9 +28,9 @@ export default function ScreenCalendar({ navigation }){
       }
     })
     .catch(err => console.log(err))
-  }
+  } 
 
-  const showConfirmDialog = ( id, title ) =>
+  const showConfirmDialogPL = ( id, title ) =>
   Alert.alert(
     "Czy chcesz usunąć to zadanie?",
     title,
@@ -40,6 +41,20 @@ export default function ScreenCalendar({ navigation }){
         style: "cancel"
       },
       { text: "NIE" }
+    ]
+  );
+
+  const showConfirmDialogEN = ( id, title ) =>
+  Alert.alert(
+    "Do you want to delete this task?",
+    title,
+    [
+      {
+        text: "YES",
+        onPress: () => {deleteTask(id)},
+        style: "cancel"
+      },
+      { text: "NO" }
     ]
   );
 
@@ -116,12 +131,41 @@ LocaleConfig.locales['pl'] = {
   today: "Dzisiaj"
 };
 
-LocaleConfig.defaultLocale = 'pl';
+LocaleConfig.locales['en'] = {
+  monthNames: [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December'
+  ],
+  monthNamesShort: ['Jan.', 'Feb', 'Mar.', 'Apr.', 'May', 'Jun.', 'Jul.', 'Aug.', 'Sep.', 'Oct.', 'Nov.', 'Dec.'],
+  dayNames: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+  dayNamesShort: ['Mon.', 'Tue.', 'Wed.', 'Thu.', 'Fri.', 'Sat.', 'Sun.'],
+  today: "Today"
+};
 
+{settings.Language == 1 ? LocaleConfig.defaultLocale = 'pl' : LocaleConfig.defaultLocale = 'en'};
+
+if (settings.Language == 1){
+  var days = ['Niedziela','Poniedziałek','Wtorek','Środa','Czwartek','Piątek','Sobota'];
+  var months = ['Styczeń','Luty','Marzec','Kwiecień','Maj','Czerwiec','Lipiec','Sierpień','Wrzesień','Październik','Listopad','Grudzień'];
+}
+else{
+  var days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];   
+}
    
     return(
     <View style={styles.container}> 
-      <Text style={styles.Header}>Kalendarz</Text>
+      <Text style={styles.Header}>{settings.Language == 1 ? 'Kalendarz' : 'Calendar'}</Text>
        <Calendar
         enableSwipeMonths={true}
         context={{ date : '' }}
@@ -131,11 +175,14 @@ LocaleConfig.defaultLocale = 'pl';
         markingType={'multi-dot'}
         markedDates={DaysToMark}
         firstDay={1}
+        theme={{
+          textMonthFontSize: 22,
+        }}
         >
        </Calendar>
        <StatusBar barStyle = "auto" />
           {filteredTasks.length == 0 ?
-            <Text style={styles.Listazad}>Brak zadań w wybranym dniu</Text>
+            <Text style={styles.Listazad}>{settings.Language == 1 ? 'Brak zadań w wybranym dniu' : 'There are no tasks on the selected day'}</Text>
           : 
           <SectionList
           renderSectionHeader={ ( {section} ) => (
@@ -214,7 +261,7 @@ LocaleConfig.defaultLocale = 'pl';
                 </Text>
               </View>
               <TouchableOpacity
-                onPress={() => showConfirmDialog( item.ID, item.Title )}
+                onPress={() => {settings.Language == 1 ? showConfirmDialogPL( item.ID, item.Title ) : showConfirmDialogEN( item.ID, item.Title )}}
               >
                   <FontAwesome5
                     name = 'trash-alt'
