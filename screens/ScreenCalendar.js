@@ -5,7 +5,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useDispatch, useSelector } from 'react-redux';
 import { setTaskID, setTasks, groupBy } from '../redux/actions';
 import * as Progress from 'react-native-progress';
-import {isWhatPercentOf, countDoneTasks, styles, onDeleteNotification} from './ScreenMain';
+import {isWhatPercentOf, countDoneTasks, onDeleteNotification} from './ScreenMain';
+import { styles } from '../GlobalStyle';
+
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 
 export default function ScreenCalendar({ navigation }){
@@ -15,23 +17,9 @@ export default function ScreenCalendar({ navigation }){
   const dispatch = useDispatch();
   const [selectedDay, setSelectedDay] = useState(new Date().toISOString().slice(0,10));
 
-  useEffect(() => {
-    getTasks();
-  }, [])
-
-  const getTasks = () => {
-    AsyncStorage.getItem('Tasks')
-    .then(tasks => {
-      const parsedTasks = JSON.parse(tasks);
-      if (parsedTasks && typeof parsedTasks === 'object'){
-        dispatch(setTasks(parsedTasks));
-      }
-    })
-    .catch(err => console.log(err))
-  } 
-
-  const showConfirmDialogPL = ( id, title ) =>
-  Alert.alert(
+  const showConfirmDialog = ( id, title ) =>
+  {settings.Language == 1 ? 
+    Alert.alert(
     "Czy chcesz usunąć to zadanie?",
     title,
     [
@@ -42,9 +30,8 @@ export default function ScreenCalendar({ navigation }){
       },
       { text: "NIE" }
     ]
-  );
-
-  const showConfirmDialogEN = ( id, title ) =>
+  )
+  :
   Alert.alert(
     "Do you want to delete this task?",
     title,
@@ -57,6 +44,7 @@ export default function ScreenCalendar({ navigation }){
       { text: "NO" }
     ]
   );
+}
 
   // usuń zadanie
 const deleteTask = (id) => {
@@ -79,13 +67,6 @@ const deleteTask = (id) => {
   
   const filteredTasks = filterTasks(selectedDay);
   const allTasks = filterTasks('');
-
-  // sortowanie dni chronologicznie
-  filteredTasks.sort((a, b) => new Date(a.key).getTime() - new Date(b.key).getTime());
-  // sortowanie godzin chronologicznie w kazdym dniu
-  for (let i = 0; i < filteredTasks.length; i++){
-    filteredTasks[i].data.sort((a, b) => new Date(a.Date).getTime() - new Date(b.Date).getTime());
-  }
 
   const priorityHigh = {color: 'red'}
   const priorityMedium = {color: 'yellow'}
@@ -164,7 +145,7 @@ else{
 }
    
     return(
-    <View style={styles.container}> 
+      <View style={settings.DarkMode == false ? styles.container : styles.container_Dark}>
       <Text style={styles.Header}>{settings.Language == 1 ? 'Kalendarz' : 'Calendar'}</Text>
        <Calendar
         enableSwipeMonths={true}
@@ -175,24 +156,25 @@ else{
         markingType={'multi-dot'}
         markedDates={DaysToMark}
         firstDay={1}
-        theme={{
-          textMonthFontSize: 22,
-        }}
+        theme={
+        settings.DarkMode == false ? styles.CalendarStyle : styles.CalendarStyle_Dark
+        }
+        key={settings.DarkMode}
         >
        </Calendar>
        <StatusBar barStyle = "auto" />
           {filteredTasks.length == 0 ?
-            <Text style={styles.Listazad}>{settings.Language == 1 ? 'Brak zadań w wybranym dniu' : 'There are no tasks on the selected day'}</Text>
+            <Text style={styles.FilterErrorText}>{settings.Language == 1 ? 'Brak zadań w wybranym dniu' : 'There are no tasks on the selected day'}</Text>
           : 
           <SectionList
           renderSectionHeader={ ( {section} ) => (
           <View>
-              <Text style={[{fontSize: 20}, styles.Item_date]}>
+             <Text style={{fontSize: 20, textAlign: 'center', backgroundColor: settings.DarkMode == false ? '#95cff0' : '#03032b', color: settings.DarkMode == false ? 'black' : 'white'}}>
                 {days[new Date(section.key).getDay()]}, {new Date(section.key).getDate()} {months[new Date(section.key).getMonth()]} {new Date(section.key).getFullYear()}
               </Text>
-              <View style={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center', backgroundColor: '#95cff0'}}>
+              <View style={{textAlign: 'center', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', backgroundColor: settings.DarkMode == false ? '#95cff0' : '#03032b', color: settings.DarkMode == false ? 'black' : 'white'}}>
                 <Progress.Bar progress={isWhatPercentOf(countDoneTasks(section.data) , section.data.length)/100} />
-              <Text>
+                <Text style={{color: settings.DarkMode == false ? 'black' : 'white'}}>
                 {' '}{countDoneTasks(section.data)}/{section.data.length} ({isWhatPercentOf(countDoneTasks(section.data) , section.data.length)}%)
               </Text>
             </View>
@@ -202,7 +184,7 @@ else{
           renderItem={({ item }) => (
           <View>
             <TouchableOpacity
-              style={styles.Item}
+              style={settings.DarkMode == false ? styles.Item : styles.Item_Dark}
               onPress={()=>{
                   dispatch(setTaskID(item.ID));
                   navigation.navigate('EditTasks');
@@ -217,7 +199,7 @@ else{
                 item.Priority === 3 ? 'red' :
                 '#f0f7ff'}}>
             </View>
-                  <View style={styles.checkbox}>
+                  <View style={{paddingRight: '3%'}}>
                     {item.Done == true
                       ? 
                       <FontAwesome5
@@ -231,21 +213,22 @@ else{
               <View style={styles.Item_body}>
                 <Text
                   style={[{textDecorationLine: item.Done === true ? 'line-through' : 'none',
-                  color: item.Done === true ? 'gray' : 'black'},
+                  color: item.Done === true ? 'gray' : settings.DarkMode == false ? 'black' : 'white'},
                   styles.ItemTitle]}
                 >
                   {item.Title} {item.IsTaskRecc == true
                   ? 
                   <FontAwesome5
                     name = 'sync'
-                    size = {20}    
+                    size = {20}
+                    color = {settings.DarkMode == false ? 'black' : 'white'} 
                   />
                   :
                   ''}
                 </Text>
                 <Text
                   style={[{textDecorationLine: item.Done === true ? 'line-through' : 'none',
-                  color: item.Done === true ? 'gray' : 'black'},
+                  color: item.Done === true ? 'gray' : settings.DarkMode == false ? 'black' : 'white'},
                   styles.ItemTitle]}
                 >
                   <FontAwesome5
@@ -254,14 +237,14 @@ else{
                 </Text>
                 <Text
                   style={[{textDecorationLine: item.Done === true ? 'line-through' : 'none',
-                  color: item.Done === true ? 'gray' : 'black'},
+                  color: item.Done === true ? 'gray' : settings.DarkMode == false ? 'black' : 'white'},
                   styles.ItemDesc]}
                 >
                   {item.Description}
                 </Text>
               </View>
               <TouchableOpacity
-                onPress={() => {settings.Language == 1 ? showConfirmDialogPL( item.ID, item.Title ) : showConfirmDialogEN( item.ID, item.Title )}}
+                onPress={() => showConfirmDialog( item.ID, item.Title )}
               >
                   <FontAwesome5
                     name = 'trash-alt'

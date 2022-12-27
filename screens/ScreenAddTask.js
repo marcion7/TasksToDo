@@ -10,10 +10,10 @@ import notifee, { AndroidImportance, TimestampTrigger, TriggerType} from '@notif
 
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 
-import {styles, pad, toLocaleISOString, getTaskDate,
+import {pad, toLocaleISOString, getTaskDate,
         RepeatOptions, MonthsOptions, DaysOptions} from './ScreenEditTask';
 
-//import { setNextID } from './ScreenMain';
+import { styles }from '../GlobalStyle';
 
 export default function ScreenAddTask({navigation}){
 
@@ -160,10 +160,10 @@ async function onCreateTriggerNotification() {
 
   const setTask = () => {
     if(title.length == 0){
-      Alert.alert('Niepoprawna nazwa','Pole nazwa nie może być puste!');
+      {settings.Language == 1 ? Alert.alert('Niepoprawna nazwa','Pole nazwa nie może być puste!') : Alert.alert('Invalid Title','The Title field cannot be empty!')};
     }
     else if(getTaskDate(date) - 60000 < new Date(Date.now() + 3600000)){ //dodaj godzinę i odejmij 1 minutę, do Date.now() trzeba też dodać godzinę
-      Alert.alert('Niepoprawna data przypomnienia', 'Należy wybrać datę przypomnienia co najmniej 1 minutę póżniej niż aktualna godzina!');
+      {settings.Language == 1 ?  Alert.alert('Niepoprawna data przypomnienia', 'Należy wybrać datę przypomnienia co najmniej 1 minutę póżniej niż aktualna godzina!') : Alert.alert('Invalid reminder date', 'Please select a reminder date at least 1 minute later than the current time!')};
     }
     else{
       try{
@@ -240,21 +240,23 @@ async function onCreateTriggerNotification() {
 */
 
   return(
-    <View style={styles.container}>
+    <View style={settings.DarkMode == false ? styles.container : styles.container_Dark}>
       <StatusBar barStyle = "auto" />
       <ScrollView>
-        <Text style={styles.TaskLabel}>{settings.Language == 1 ? 'Nazwa' : 'Title'}</Text>
+        <Text style={[styles.TaskLabel, {color: settings.DarkMode == false ? 'black' : 'white'}]}>{settings.Language == 1 ? 'Nazwa' : 'Title'}</Text>
           <TextInput 
-            style={styles.InputText}
+            style={settings.DarkMode == false ? styles.InputText : styles.InputText_Dark}
             value={title}
             placeholder={settings.Language == 1 ? 'Wpisz nazwę zadania...' : 'Enter task title...'}
+            placeholderTextColor='grey'
             onChangeText={(value) => setTitle(value)}
           />
-        <Text style={styles.TaskLabel}>{settings.Language == 1 ? 'Opis (opcjonalnie)' : 'Description (optional)'}</Text>
+        <Text style={[styles.TaskLabel, {color: settings.DarkMode == false ? 'black' : 'white'}]}>{settings.Language == 1 ? 'Opis (opcjonalnie)' : 'Description (optional)'}</Text>
           <TextInput 
-            style={styles.InputText}
+            style={settings.DarkMode == false ? styles.InputText : styles.InputText_Dark}
             value={description}
             placeholder={settings.Language == 1 ? 'Dodaj opis...' : 'Add description...'}
+            placeholderTextColor='grey'
             multiline
             onChangeText={(value) => setDescription(value)}
           />
@@ -264,21 +266,22 @@ async function onCreateTriggerNotification() {
             value={isTaskRecc} 
             onValueChange={setTaskRecc}
           />
-        <Text style={styles.TaskLabel}>{settings.Language == 1 ?'  Cykliczne' : '  Reccuring'}</Text>
+        <Text style={[styles.TaskLabel, {color: settings.DarkMode == false ? 'black' : 'white'}]}>{settings.Language == 1 ?'  Cykliczne' : '  Reccuring'}</Text>
       </Text>
       <View>
         <View style={styles.DateHour}>
-          <Text style={styles.TaskLabel}>{settings.Language == 1 ? 'Data' : 'Date'}</Text>
-          <Text style={styles.TaskLabel}>{settings.Language == 1 ? 'Godzina' : 'Hour'}</Text>
+          <Text style={[styles.TaskLabel, {color: settings.DarkMode == false ? 'black' : 'white'}]}>{settings.Language == 1 ? 'Data' : 'Date'}</Text>
+          <Text style={[styles.TaskLabel, {color: settings.DarkMode == false ? 'black' : 'white'}]}>{settings.Language == 1 ? 'Godzina' : 'Hour'}</Text>
         </View>
-      <View style={styles.DateHourButton}>
+      <View style={settings.DarkMode == false ? styles.DateHourButton : styles.DateHourButton_Dark}>
         {showDate ?
         <View>
           <TouchableOpacity 
             onPress={() => setShowDate(true)}>
-              <Text style = {styles.DateHourText}>
+              <Text style = {[styles.DateHourText, {color: settings.DarkMode == false ? 'black' : 'white'}]}>
               <FontAwesome5
                 name = 'calendar-day'
+                color= {settings.DarkMode == false ? 'black' : 'white'}
                 size = {30} /> {pad(new Date(date).getDate())+"/"+pad(new Date(date).getMonth()+1)+"/"+new Date(date).getFullYear()}
               </Text>
           </TouchableOpacity>
@@ -292,9 +295,10 @@ async function onCreateTriggerNotification() {
             :
             <TouchableOpacity 
             onPress={() => setShowDate(true)}>
-              <Text style = {styles.DateHourText}>
+              <Text style = {[styles.DateHourText, {color: settings.DarkMode == false ? 'black' : 'white'}]}>
               <FontAwesome5
                 name = 'calendar-day'
+                color= {settings.DarkMode == false ? 'black' : 'white'}
                 size = {30} /> {pad(new Date(date).getDate())+"/"+pad(new Date(date).getMonth()+1)+"/"+new Date(date).getFullYear()}
               </Text>
             </TouchableOpacity>
@@ -303,9 +307,10 @@ async function onCreateTriggerNotification() {
         <View>
           <TouchableOpacity 
             onPress={() => setShowTime(true)}>
-              <Text style = {styles.DateHourText}>
+              <Text style = {[styles.DateHourText, {color: settings.DarkMode == false ? 'black' : 'white'}]}>
               <FontAwesome5
                 name = 'clock'
+                color= {settings.DarkMode == false ? 'black' : 'white'}
                 size = {30} /> {pad(new Date(date).getHours()) + ":" + pad(new Date(date).getMinutes())}
               </Text>
           </TouchableOpacity>
@@ -318,16 +323,17 @@ async function onCreateTriggerNotification() {
             :
             <TouchableOpacity 
             onPress={() => setShowTime(true)}>
-              <Text style = {styles.DateHourText}>
+              <Text style = {[styles.DateHourText, {color: settings.DarkMode == false ? 'black' : 'white'}]}>
               <FontAwesome5
                 name = 'clock'
+                color= {settings.DarkMode == false ? 'black' : 'white'}
                 size = {30} /> {pad(new Date(date).getHours()) + ":" + pad(new Date(date).getMinutes())}
               </Text>
             </TouchableOpacity>
         }
         </View>
       </View>
-      <Text style={styles.TaskLabel}>{settings.Language == 1 ? 'Priorytet' : 'Priority'}</Text>
+      <Text style={[styles.TaskLabel, {color: settings.DarkMode == false ? 'black' : 'white'}]}>{settings.Language == 1 ? 'Priorytet' : 'Priority'}</Text>
       <View style={styles.priority_bar}>
         <TouchableOpacity
           style={{flex: 1, backgroundColor: '#60f777', justifyContent: 'center', alignItems: 'center'}}

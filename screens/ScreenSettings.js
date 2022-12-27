@@ -6,32 +6,26 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setSettings } from '../redux/actions';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import {styles} from './ScreenEditTask';
+import { styles }from '../GlobalStyle';
 
 export default function ScreenSettings(){
   
   const { settings } = useSelector(state => state.taskReducer);
   const dispatch = useDispatch();
 
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(settings.DarkMode);
 
-  const [language, setLanguage] = useState(1);
+  const [language, setLanguage] = useState(settings.Language);
   const [showlanguage, setShowLanguage] = useState(false);
 
   useEffect(() => {
-    getSettings();
+    updateSettings();
   }, [])
 
-// pobierz zadanie
-const getSettings = async () => {
-  const Settings = await AsyncStorage.getItem('Settings')
-  const parsedSettings = JSON.parse(Settings)
-  if(parsedSettings){
-    setSettings(parsedSettings);
-    setDarkMode(parsedSettings.DarkMode);
-    setLanguage(parsedSettings.Language);
+  const updateSettings = () => {
+      setDarkMode(settings.DarkMode);
+      setLanguage(settings.Language);
   }
-}
 
   const changeTheme = () => {
     setDarkMode(current => !current);
@@ -80,8 +74,8 @@ const getSettings = async () => {
     }
    
     return(
-    <View style={settings.DarkMode == false ? styles.container : styles.containerDark}>
-      <Text style={stylesSettings.Header}>Ustawienia</Text>
+    <View style={settings.DarkMode == false ? styles.container : styles.container_Dark}>
+      <Text style={stylesSettings.Header}>{settings.Language == 1 ? 'Ustawienia' : 'Settings'}</Text>
         <View style={stylesSettings.Theme}>
           <ToggleSwitch
             isOn={darkMode}
@@ -91,7 +85,6 @@ const getSettings = async () => {
             size='large'
             labelStyle={{ fontSize: 25, color: settings.DarkMode==false ? 'black' : 'white' }}
             onToggle={changeTheme}
-            //onToggle={() => { changeTheme(); setSetting();}}
           />
           <View style={{flexDirection: 'row', alignItems: 'center'}}>
             <Text style={{fontSize: 25, marginTop: 10, marginRight: 10, color: settings.DarkMode==false ? 'black' : 'white'  }}>{settings.Language == 1 ? "Język" : "Language"}</Text>

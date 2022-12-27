@@ -1,15 +1,15 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, StatusBar, Alert, SectionList, Button } from 'react-native';
+import { Text, View, TouchableOpacity, StatusBar, Alert, SectionList, Button } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { setTaskID, setTasks, groupBy } from '../redux/actions';
+import { setTaskID, setTasks, groupBy, setSettings } from '../redux/actions';
 import { Picker } from '@react-native-picker/picker';
 import * as Progress from 'react-native-progress';
 import notifee from '@notifee/react-native';
 
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 
-//import theme from './ScreenSettings';
+import { styles }from '../GlobalStyle';
 
 // usuń powiadomienie
 export async function onDeleteNotification(notificationId) {
@@ -55,7 +55,7 @@ export const setNextID = (array) => {
 
 export default function ScreenMain( {navigation} ){
 
-  const { tasks, taskID } = useSelector(state => state.taskReducer);
+  const { tasks } = useSelector(state => state.taskReducer);
   const { settings } = useSelector(state => state.taskReducer);
   const dispatch = useDispatch();
 
@@ -66,6 +66,7 @@ export default function ScreenMain( {navigation} ){
 
   useEffect(() => {
     getTasks();
+    getSettings();
   }, [])
 
 //co minute pobieraj zadania
@@ -83,6 +84,18 @@ else{
   var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];   
 }
 
+// pobierz ustawienia
+const getSettings = () => {
+  AsyncStorage.getItem('Settings')
+  .then(settings => {
+    const parsedSettings = JSON.parse(settings);
+    if (parsedSettings){
+      dispatch(setSettings(parsedSettings));
+    }
+  })
+  .catch(err => console.log(err))
+}
+
 // pobierz zadania
 const getTasks = () => {
   AsyncStorage.getItem('Tasks')
@@ -96,18 +109,33 @@ const getTasks = () => {
 }
 
 const showConfirmDialog = ( id, title ) =>
-    Alert.alert(
-      "Czy chcesz usunąć to zadanie?",
-      title,
-      [
-        {
-          text: "TAK",
-          onPress: () => {deleteTask(id)},
-          style: "cancel"
-        },
-        { text: "NIE" }
-      ]
-    );
+{settings.Language == 1 ? 
+  Alert.alert(
+  "Czy chcesz usunąć to zadanie?",
+  title,
+  [
+    {
+      text: "TAK",
+      onPress: () => {deleteTask(id)},
+      style: "cancel"
+    },
+    { text: "NIE" }
+  ]
+)
+:
+Alert.alert(
+  "Do you want to delete this task?",
+  title,
+  [
+    {
+      text: "YES",
+      onPress: () => {deleteTask(id)},
+      style: "cancel"
+    },
+    { text: "NO" }
+  ]
+);
+}
 
 // usuń zadanie
 const deleteTask = (id) => {
@@ -167,7 +195,7 @@ for (let i = 0; i < filteredTasks.length; i++){
    oldTasks = groupBy(oldTasks, 'Date')
    oldTasks = Object.keys(oldTasks).map((key)=> ({key: key, data: oldTasks[key]}))
 
-  function setSelectedTasks (id){
+  function setSelectedTasks (){
    switch (TasksDateFilterIndex) {
     case 0:
       return filteredTasks;
@@ -182,7 +210,7 @@ for (let i = 0; i < filteredTasks.length; i++){
 
 
     return(
-    <View style={styles.container}>
+    <View style={settings.DarkMode == false ? styles.container : styles.container_Dark}>
       <StatusBar barStyle = "auto" />
       <Text style={styles.Header}>{settings.Language == 1 ? 'Lista zadań' : 'Tasks List'}</Text>
         <View style={{ height: "91%" }}>
@@ -258,19 +286,19 @@ for (let i = 0; i < filteredTasks.length; i++){
               </TouchableOpacity>
             </View>
         {filteredTasks.length == 0 ?
-          <Text style={styles.Listazad}>{settings.Language == 1 ? 'Lista zadań jest pusta' : 'Tasks list is empty'}</Text>
+          <Text style={styles.FilterErrorText}>{settings.Language == 1 ? 'Lista zadań jest pusta' : 'Tasks list is empty'}</Text>
         : setSelectedTasks(TasksDateFilterIndex).length == 0 ?
-          <Text style={styles.Listazad}>{settings.Language == 1 ? 'Brak zadań o podanych kryteriach' : 'There are no tasks with the given criteria'}</Text>
+          <Text style={styles.FilterErrorText}>{settings.Language == 1 ? 'Brak zadań o podanych kryteriach' : 'There are no tasks with the given criteria'}</Text>
         :
         <SectionList
           renderSectionHeader={ ( {section} ) => (
           <View>
-              <Text style={[{fontSize: 20}, styles.Item_date]}>
+              <Text style={{fontSize: 20, textAlign: 'center', backgroundColor: settings.DarkMode == false ? '#95cff0' : '#03032b', color: settings.DarkMode == false ? 'black' : 'white'}}>
                 {days[new Date(section.key).getDay()]}, {new Date(section.key).getDate()} {months[new Date(section.key).getMonth()]} {new Date(section.key).getFullYear()}
               </Text>
-              <View style={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center', backgroundColor: '#95cff0'}}>
+              <View style={{textAlign: 'center', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', backgroundColor: settings.DarkMode == false ? '#95cff0' : '#03032b', color: settings.DarkMode == false ? 'black' : 'white'}}>
                 <Progress.Bar progress={isWhatPercentOf(countDoneTasks(section.data) , section.data.length)/100} />
-              <Text>
+              <Text style={{color: settings.DarkMode == true ? 'white' : 'black'}}>
                 {' '}{countDoneTasks(section.data)}/{section.data.length} ({isWhatPercentOf(countDoneTasks(section.data) , section.data.length)}%)
               </Text>
             </View>
@@ -280,7 +308,7 @@ for (let i = 0; i < filteredTasks.length; i++){
           renderItem={({ item }) => (
           <View>
             <TouchableOpacity
-              style={styles.Item}
+              style={settings.DarkMode == false ? styles.Item : styles.Item_Dark}
               onPress={()=>{
                   dispatch(setTaskID(item.ID));
                   navigation.navigate('EditTasks');
@@ -295,7 +323,7 @@ for (let i = 0; i < filteredTasks.length; i++){
                 item.Priority === 3 ? 'red' :
                 '#f0f7ff'}}>
             </View>
-                  <View style={styles.checkbox}>
+                  <View style={{paddingRight: '3%'}}>
                     {item.Done == true
                       ? 
                       <FontAwesome5
@@ -309,21 +337,22 @@ for (let i = 0; i < filteredTasks.length; i++){
               <View style={styles.Item_body}>
                 <Text
                   style={[{textDecorationLine: item.Done === true ? 'line-through' : 'none',
-                  color: item.Done === true ? 'gray' : 'black'},
+                  color: item.Done === true ? 'gray' : settings.DarkMode == false ? 'black' : 'white'},
                   styles.ItemTitle]}
                 >
                   {item.Title} {item.IsTaskRecc == true
                   ? 
                   <FontAwesome5
                     name = 'sync'
-                    size = {20}    
+                    size = {20}
+                    color = {settings.DarkMode == false ? 'black' : 'white'}   
                   />
                   :
                   ''}
                 </Text>
                 <Text
                   style={[{textDecorationLine: item.Done === true ? 'line-through' : 'none',
-                  color: item.Done === true ? 'gray' : 'black'},
+                  color: item.Done === true ? 'gray' : settings.DarkMode == false ? 'black' : 'white'},
                   styles.ItemTitle]}
                 >
                   <FontAwesome5
@@ -332,7 +361,7 @@ for (let i = 0; i < filteredTasks.length; i++){
                 </Text>
                 <Text
                   style={[{textDecorationLine: item.Done === true ? 'line-through' : 'none',
-                  color: item.Done === true ? 'gray' : 'black'},
+                  color: item.Done === true ? 'gray' : settings.DarkMode == false ? 'black' : 'white'},
                   styles.ItemDesc]}
                 >
                   {item.Description}
@@ -366,85 +395,3 @@ for (let i = 0; i < filteredTasks.length; i++){
     </View>
   )
 }
-
-  export const styles = StyleSheet.create({
-    container: {
-      backgroundColor: '#ffffff',
-      height: '100%',
-    },
-    Header: {
-      color: '#ffffff',
-      backgroundColor: '#0b146b',
-      fontSize: 20,
-      fontFace: 'tahoma',
-      padding: 15,
-      fontWeight: '500'
-    },
-    Listazad: {
-      color: '#909899',
-      fontSize: 20,
-      marginTop: 20,
-      textAlign: 'center'
-    },
-    AddButton: {
-      position: 'absolute',
-      bottom: 30,
-      right: 30,
-      width: 70,
-      alignItems: 'center',
-      borderRadius: 100,
-      backgroundColor: 'blue',
-    },
-    plus: {
-      color: '#ffffff',
-      fontSize: 50,
-      padding: -20
-    },
-    checkbox: {
-      paddingRight: '3%',
-    },
-    filterText: {
-      color: 'white',
-      fontSize: 20,
-      paddingHorizontal: '2%',
-      paddingVertical: '3%',
-      fontWeight: '500',
-      width: '25%'
-    },
-    taskDateFilter_bar: {
-      color: 'white',
-      flexDirection: 'row',
-      height: 50,
-      borderWidth: 2,
-      borderColor: '#555555',
-    },
-    TaskDateFilterText: {
-      color: 'white',
-      fontSize: 20
-  },
-    Item_date: {
-      backgroundColor: '#95cff0',
-      textAlign: 'center'
-    },
-    Item: {
-      marginHorizontal: '1%',
-      marginVertical: '1%',
-      paddingHorizontal: '1%',
-      backgroundColor: '#f0f7ff',
-      justifyContent: 'center'
-    },
-    Item_row:{
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    Item_body:{
-      flex: 1,
-    },
-    ItemTitle: {
-      fontWeight: 'bold',
-      fontSize: 18,
-    },
-    ItemDesc: {
-
-    }
-  });

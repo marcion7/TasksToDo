@@ -2,8 +2,6 @@ import React, { useEffect } from 'react';
 import { Provider, useSelector } from 'react-redux';
 import { Store } from './redux/store';
 
-import { setSettings } from './redux/actions';
-
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -15,8 +13,6 @@ import ScreenCalendar from './screens/ScreenCalendar';
 import ScreenSettings from './screens/ScreenSettings';
 import ScreenAddTask from './screens/ScreenAddTask';
 import ScreenEditTask from './screens/ScreenEditTask';
-
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Tab = createBottomTabNavigator();
 
@@ -83,9 +79,6 @@ function BottomTabs() {
 }
 
 const Stack = createNativeStackNavigator();
-
-const Settings = AsyncStorage.getItem('Settings');
-
 
 function App() {
 

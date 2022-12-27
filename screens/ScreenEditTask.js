@@ -11,6 +11,7 @@ import notifee, { TimestampTrigger, TriggerType, AndroidImportance} from '@notif
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 
 import { onDeleteNotification } from './ScreenMain';
+import { styles }from '../GlobalStyle';
 
 // wyświetl 0 przed cyframi 0...9
 export function pad(n) {return n < 10 ? "0"+n : n;}
@@ -353,19 +354,34 @@ async function onCreateTriggerNotification() {
   }, [])
 
   // alert o usuwaniu zadania
-const showConfirmDialog = ( id, title ) =>
-Alert.alert(
-  "Czy chcesz usunąć to zadanie?",
-  title,
-  [
-    {
-      text: "TAK",
-      onPress: () => {deleteTask(id), navigation.navigate('Main')},
-      style: "cancel"
-    },
-    { text: "NIE" }
-  ]
-);
+  const showConfirmDialog = ( id, title ) =>
+  {settings.Language == 1 ? 
+    Alert.alert(
+    "Czy chcesz usunąć to zadanie?",
+    title,
+    [
+      {
+        text: "TAK",
+        onPress: () => {deleteTask(id)},
+        style: "cancel"
+      },
+      { text: "NIE" }
+    ]
+  )
+  :
+  Alert.alert(
+    "Do you want to delete this task?",
+    title,
+    [
+      {
+        text: "YES",
+        onPress: () => {deleteTask(id)},
+        style: "cancel"
+      },
+      { text: "NO" }
+    ]
+  );
+  }
 
 // usuń zadanie
 const deleteTask = (id) => {
@@ -396,12 +412,12 @@ const deleteTask = (id) => {
   }
 
   // ustaw zadanie
-  function setTask() {
-      if(title.length == 0){
-        Alert.alert('Niepoprawna nazwa','Pole nazwa nie może być puste!');
-      }
-      else if(getTaskDate(date) - 60000 < new Date(Date.now() + 3600000)){ //dodaj godzinę i odejmij 1 minutę, do Date.now() trzeba też dodać godzinę
-        Alert.alert('Niepoprawna data przypomnienia', 'Należy wybrać datę przypomnienia co najmniej 1 minutę póżniej niż aktualna godzina!');
+  const setTask = () => {
+    if(title.length == 0){
+      {settings.Language == 1 ? Alert.alert('Niepoprawna nazwa','Pole nazwa nie może być puste!') : Alert.alert('Invalid Title','The Title field cannot be empty!')};
+    }
+    else if(getTaskDate(date) - 60000 < new Date(Date.now() + 3600000)){ //dodaj godzinę i odejmij 1 minutę, do Date.now() trzeba też dodać godzinę
+      {settings.Language == 1 ?  Alert.alert('Niepoprawna data przypomnienia', 'Należy wybrać datę przypomnienia co najmniej 1 minutę póżniej niż aktualna godzina!') : Alert.alert('Invalid reminder date', 'Please select a reminder date at least 1 minute later than the current time!')};
       }
       else{
         try{
@@ -468,10 +484,10 @@ const deleteTask = (id) => {
   }*/
 
   return(
-    <View style={styles.container}>
+    <View style={settings.DarkMode == false ? styles.container : styles.container_Dark}>
       <StatusBar barStyle = "auto" />
       <ScrollView>
-        <Text style={{marginLeft: '33%', marginTop: '3%'}}>
+        <Text style={{marginLeft: settings.Language == 1 ? '33%' : '40%', marginTop: '3%', color: settings.DarkMode == false ? 'black' : 'white'}}>
           <Checkbox 
             style={styles.checkbox} 
             value={done} 
@@ -479,42 +495,45 @@ const deleteTask = (id) => {
           />
           <Text style={styles.TaskLabel}>{settings.Language == 1 ? '  Wykonane' : '  Done'}</Text>
         </Text>
-        <Text style={styles.TaskLabel}>{settings.Language == 1 ? 'Nazwa' : 'Title'}</Text>
+        <Text style={[styles.TaskLabel, {color: settings.DarkMode == false ? 'black' : 'white'}]}>{settings.Language == 1 ? 'Nazwa' : 'Title'}</Text>
           <TextInput 
-            style={styles.InputText}
+            style={settings.DarkMode == false ? styles.InputText : styles.InputText_Dark}
             value={title}
             placeholder={settings.Language == 1 ? 'Wpisz nazwę zadania...' : 'Enter task title...'}
+            placeholderTextColor='grey'
             onChangeText={(value) => setTitle(value)}
           />
-        <Text style={styles.TaskLabel}>{settings.Language == 1 ? 'Opis (opcjonalnie)' : 'Description (optional)'}</Text>
+        <Text style={[styles.TaskLabel, {color: settings.DarkMode == false ? 'black' : 'white'}]}>{settings.Language == 1 ? 'Opis (opcjonalnie)' : 'Description (optional)'}</Text>
           <TextInput 
-            style={styles.InputText}
+            style={settings.DarkMode == false ? styles.InputText : styles.InputText_Dark}
             value={description}
             placeholder={settings.Language == 1 ? 'Dodaj opis...' : 'Add description...'}
+            placeholderTextColor='grey'
             multiline
             onChangeText={(value) => setDescription(value)}
-            />
+          />
         <Text style={styles.checkboxText}>
           <Checkbox
             style={styles.checkbox} 
             value={isTaskRecc} 
             onValueChange={setTaskRecc}
           />
-          <Text style={styles.TaskLabel}>{settings.Language == 1 ?'  Cykliczne' : '  Reccuring'}</Text>
-        </Text>
+        <Text style={[styles.TaskLabel, {color: settings.DarkMode == false ? 'black' : 'white'}]}>{settings.Language == 1 ?'  Cykliczne' : '  Reccuring'}</Text>
+      </Text>
       <View>
         <View style={styles.DateHour}>
-          <Text style={styles.TaskLabel}>{settings.Language == 1 ? 'Data' : 'Date'}</Text>
-          <Text style={styles.TaskLabel}>{settings.Language == 1 ? 'Godzina' : 'Hour'}</Text>
+          <Text style={[styles.TaskLabel, {color: settings.DarkMode == false ? 'black' : 'white'}]}>{settings.Language == 1 ? 'Data' : 'Date'}</Text>
+          <Text style={[styles.TaskLabel, {color: settings.DarkMode == false ? 'black' : 'white'}]}>{settings.Language == 1 ? 'Godzina' : 'Hour'}</Text>
         </View>
-      <View style={styles.DateHourButton}>
+      <View style={settings.DarkMode == false ? styles.DateHourButton : styles.DateHourButton_Dark}>
         {showDate ?
         <View>
           <TouchableOpacity 
             onPress={() => setShowDate(true)}>
-              <Text style = {styles.DateHourText}>
+              <Text style = {[styles.DateHourText, {color: settings.DarkMode == false ? 'black' : 'white'}]}>
               <FontAwesome5
                 name = 'calendar-day'
+                color= {settings.DarkMode == false ? 'black' : 'white'}
                 size = {30} /> {pad(new Date(date).getDate())+"/"+pad(new Date(date).getMonth()+1)+"/"+new Date(date).getFullYear()}
               </Text>
           </TouchableOpacity>
@@ -528,9 +547,10 @@ const deleteTask = (id) => {
             :
             <TouchableOpacity 
             onPress={() => setShowDate(true)}>
-              <Text style = {styles.DateHourText}>
+              <Text style = {[styles.DateHourText, {color: settings.DarkMode == false ? 'black' : 'white'}]}>
               <FontAwesome5
                 name = 'calendar-day'
+                color= {settings.DarkMode == false ? 'black' : 'white'}
                 size = {30} /> {pad(new Date(date).getDate())+"/"+pad(new Date(date).getMonth()+1)+"/"+new Date(date).getFullYear()}
               </Text>
             </TouchableOpacity>
@@ -539,9 +559,10 @@ const deleteTask = (id) => {
         <View>
           <TouchableOpacity 
             onPress={() => setShowTime(true)}>
-              <Text style = {styles.DateHourText}>
+              <Text style = {[styles.DateHourText, {color: settings.DarkMode == false ? 'black' : 'white'}]}>
               <FontAwesome5
                 name = 'clock'
+                color= {settings.DarkMode == false ? 'black' : 'white'}
                 size = {30} /> {pad(new Date(date).getHours()) + ":" + pad(new Date(date).getMinutes())}
               </Text>
           </TouchableOpacity>
@@ -554,16 +575,17 @@ const deleteTask = (id) => {
             :
             <TouchableOpacity 
             onPress={() => setShowTime(true)}>
-              <Text style = {styles.DateHourText}>
+              <Text style = {[styles.DateHourText, {color: settings.DarkMode == false ? 'black' : 'white'}]}>
               <FontAwesome5
                 name = 'clock'
+                color= {settings.DarkMode == false ? 'black' : 'white'}
                 size = {30} /> {pad(new Date(date).getHours()) + ":" + pad(new Date(date).getMinutes())}
               </Text>
             </TouchableOpacity>
         }
         </View>
       </View>
-      <Text style={styles.TaskLabel}>{settings.Language == 1 ? 'Priorytet' : 'Priority'}</Text>
+      <Text style={[styles.TaskLabel, {color: settings.DarkMode == false ? 'black' : 'white'}]}>{settings.Language == 1 ? 'Priorytet' : 'Priority'}</Text>
       <View style={styles.priority_bar}>
         <TouchableOpacity
           style={{flex: 1, backgroundColor: '#60f777', justifyContent: 'center', alignItems: 'center'}}
@@ -620,115 +642,3 @@ const deleteTask = (id) => {
   </View>
   )
 }
-
-  export const styles = StyleSheet.create({
-    container: {
-      backgroundColor: '#ffffff',
-      height: '100%',
-    },
-    containerDark: {
-      backgroundColor: '#000000',
-      height: '100%',
-    },
-    Buttons: {
-      alignItems: 'flex-start',
-      flexDirection: 'row',
-      justifyContent: 'space-evenly',
-      height: 150
-    },
-    Header: {
-      color: '#ffffff',
-      backgroundColor: '#0b146b',
-      fontSize: 20,
-      fontFace: 'tahoma',
-      padding: 10
-    },
-    DateHour: {
-      flexDirection: 'row',
-      justifyContent: 'space-around',
-      marginRight: 15
-    },
-    DateHourButton: {
-      flexDirection: 'row',
-      justifyContent: 'space-around',
-      marginTop: 5,
-      paddingRight: 40,
-      borderBottomWidth: 1,
-    },
-    StartEndDatesButton: {
-      flexDirection: 'row',
-      justifyContent: 'space-around',
-      marginTop: 5,
-      paddingRight: 10,
-      borderBottomWidth: 1,
-    },
-    DateHourText: {
-      fontSize: 20,
-      fontWeight: '500',
-      backgroundColor: '#d7dbd8',
-      borderRadius: 10,
-      borderWidth: 2,
-      borderColor: '#d7dbd8'
-    },
-    TaskLabel: {
-      fontWeight: 'bold',
-      fontSize: 20,
-      marginTop: 10,
-      marginLeft: 10,
-    },
-    TaskRepeatLabel: {
-      fontWeight: 'bold',
-      fontSize: 20,
-      marginTop: 10,
-      marginLeft: 10,
-      width: '25%'
-    },
-    InputText: {
-      fontSize: 20,
-      borderBottomWidth: 1,
-      padding: 5
-    },
-    EditTask: {
-      marginTop: 10,
-      width: '40%',
-      height: '40%',
-      position: 'relative',
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: 'green',
-      borderRadius: 10
-    },
-    DeleteTask: {
-      marginTop: 10,
-      width: '40%',
-      height: '40%',
-      position: 'relative',
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: 'red',
-      borderRadius: 10
-    },
-    ButtonAdd: {
-      fontSize: 25,
-      textAlign: 'center',
-    },
-    checkbox: {
-      transform: [{ scaleX: 1.5 }, { scaleY: 1.5 }],
-    },
-    checkboxText: {
-      marginLeft: '3%',
-      marginTop: '3%',
-    },
-    priority_bar: {
-      flexDirection: 'row',
-      height: 70,
-      borderWidth: 2,
-      borderRadius: 10,
-      borderColor: '#555555',
-      marginVertical: '3%'
-    },
-    iconStyle: {
-      width: 20,
-      height: 15
-    }
-  });
