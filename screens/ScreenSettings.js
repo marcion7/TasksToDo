@@ -13,9 +13,9 @@ export default function ScreenSettings(){
   const { settings } = useSelector(state => state.taskReducer);
   const dispatch = useDispatch();
 
-  const [darkMode, setDarkMode] = useState(settings.DarkMode);
+  const [darkMode, setDarkMode] = useState(false);
 
-  const [language, setLanguage] = useState(settings.Language);
+  const [language, setLanguage] = useState(1);
   const [showlanguage, setShowLanguage] = useState(false);
 
   useEffect(() => {
@@ -23,8 +23,10 @@ export default function ScreenSettings(){
   }, [])
 
   const updateSettings = () => {
+    if(settings.Language != null && settings.DarkMode != null){
       setDarkMode(settings.DarkMode);
       setLanguage(settings.Language);
+    }
   }
 
   const changeTheme = () => {

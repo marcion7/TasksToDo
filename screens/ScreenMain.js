@@ -89,8 +89,13 @@ const getSettings = () => {
   AsyncStorage.getItem('Settings')
   .then(settings => {
     const parsedSettings = JSON.parse(settings);
-    if (parsedSettings){
+    if (parsedSettings != null){
       dispatch(setSettings(parsedSettings));
+    }
+    else{
+      const defaultSettings = JSON.stringify({DarkMode: false, Language: 1});
+      const parsedSettings = JSON.parse(defaultSettings);
+      dispatch(setSettings(parsedSettings))
     }
   })
   .catch(err => console.log(err))
