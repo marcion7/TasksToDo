@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, StatusBar, TextInput, Alert, ScrollView} from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, StatusBar, TextInput, Alert, Linking, ScrollView} from 'react-native';
 import Checkbox from 'expo-checkbox';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useDispatch, useSelector } from 'react-redux';
@@ -252,31 +252,48 @@ export default function ScreenEditTask({navigation}){
 
 // zaplanuj powiadomienie
 async function onCreateTriggerNotification() {
-
-  if (showNotification == false) {
     const trigger: TimestampTrigger = {
       type: TriggerType.TIMESTAMP,
       timestamp: date.getTime(),
     };
-  } else {
-    Alert.alert(
-      "Aby otrzymać powiadomienia o zadaniach należy zezwolić aplikacji na Autostart",
-      "Dotyczy to niektórych producentów telefonów np. Xiaomi"
-      [
-        {
-          text: "ZEZWÓL",
-          onPress: () => {Linking.openSettings();},
-          style: "cancel"
-        },
-        {
-          text: "NIE POKAZUJ PONOWNIE",
-          onPress: () => {setShowNotification(false)},
-          style: "cancel"
-        },
-        { text: "ANULUJ" }
-      ]
-    );
- }
+    /*if(showNotification){
+      if(settings.Language == 1){
+        Alert.alert(
+          "Powiadomienia",
+          "Aby otrzymać powiadomienia o zadaniach należy zezwolić aplikacji na Autostart. Dotyczy to niektórych producentów telefonów np. Xiaomi",
+          [
+            {
+              text: "ZEZWÓL",
+              onPress: () => {Linking.openSettings();},
+            },
+            {
+              text: "NIE POKAZUJ PONOWNIE",
+              onPress: () => {setShowNotification(false)},
+              style: "cancel"
+            },
+            { text: "ANULUJ" }
+          ]
+        );
+      }
+      else if (settings.Language == 2){
+        Alert.alert(
+          "Notifications",
+          "To receive task notifications, you must allow the application to Autostart. This applies to some phone manufacturers, e.g. Xiaomi.",
+          [
+            {
+              text: "ALLOW",
+              onPress: () => {Linking.openSettings();},
+            },
+            {
+              text: "DON'T SHOW AGAIN",
+              onPress: () => {setShowNotification(false);},
+              style: "cancel"
+            },
+            { text: "CANCEL" }
+          ]
+        );
+      }
+  }*/
 
    const channelId = await notifee.createChannel({
     id: 'default',
@@ -390,6 +407,7 @@ const deleteTask = (id) => {
     .then(() =>{
       dispatch(setTasks(filteredTasks));
       onDeleteNotification(taskID.toString())
+      navigation.goBack();
     })
     .catch(err => console.log(err))
 }

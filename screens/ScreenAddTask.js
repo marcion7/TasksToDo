@@ -88,6 +88,7 @@ async function onCreateTriggerNotification() {
 
 // jezeli lista zadań jest pusta wyświetl komunikat o powiadomieniach
   if (tasks.length == 0 && showNotification) {
+    if(settings.Language == 1)
     Alert.alert(
       "Powiadomienia",
       "Aby otrzymać powiadomienia o zadaniach należy zezwolić aplikacji na Autostart. Dotyczy to niektórych producentów telefonów np. Xiaomi.",
@@ -99,6 +100,19 @@ async function onCreateTriggerNotification() {
         { text: "ANULUJ" },
       ]
     );
+    else if (settings.Language == 2){
+      Alert.alert(
+        "Notifications",
+        "To receive task notifications, you must allow the application to Autostart. This applies to some phone manufacturers, e.g. Xiaomi.",
+        [
+          {
+            text: "ALLOW",
+            onPress: () => {Linking.openSettings();},
+          },
+          { text: "CANCEL" },
+        ]
+      );
+    }
     setShowNotification(false);
   }
 
