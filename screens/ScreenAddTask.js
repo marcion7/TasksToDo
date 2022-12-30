@@ -56,9 +56,16 @@ async function onCreateTriggerNotification() {
       timestamp: date.getTime(),
     };
 
+    if(settings.Language == 1){
+      var name = 'Przypomnienie o zadaniach ';
+    }
+    else if (settings.Language == 2){
+      var name = 'Notifications about tasks ';
+    }
+
    const channelId = await notifee.createChannel({
     id: 'default',
-    name: 'Przypomnienie o zadaniach ',
+    name: name,
     importance: AndroidImportance.HIGH
   });
 
@@ -172,40 +179,75 @@ async function onCreateTriggerNotification() {
     }
   }
 
+  // zaktualizuj zadanie
+  const updateTask = () => {
+    try{
+      var Task ={
+        ID: taskID,
+        Title: title,
+        Description: description,
+        IsTaskRecc: isTaskRecc,
+        Date: typeof date == "string" ? date : toLocaleISOString(date),
+        Done: false,
+        Priority: priority,
+      }
+      const index = tasks.findIndex(task => task.ID === taskID)
+      let newTasks = [];
+      if (index > -1){
+        newTasks = [...tasks];
+        newTasks[index] = Task;
+      }
+      else{
+        newTasks = [...tasks, Task];
+      }
+
+      AsyncStorage.setItem('Tasks', JSON.stringify(newTasks))
+      .then(() => {
+            dispatch(setTasks(newTasks));
+            {settings.Language == 1 ? Alert.alert('Nowe zadanie', title) : Alert.alert('New Task', title)};
+            if (getTaskDate(date) > new Date(Date.now() + 3600000))
+              onCreateTriggerNotification()
+            navigation.goBack();
+      })
+      .catch(err => console.log(err))
+    }
+    catch(error){
+      console.log(error);
+    }
+  }
+
+  // ustaw zadanie
   const setTask = () => {
     if(title.length == 0){
-      {settings.Language == 1 ? Alert.alert('Niepoprawna nazwa','Pole nazwa nie może być puste!') : Alert.alert('Invalid Title','The Title field cannot be empty!')};
+      {settings.Language == 1 ? Alert.alert('Niepoprawna nazwa','Pole Nazwa nie może być puste!') : Alert.alert('Invalid Title','The Title field cannot be empty!')};
     }
-    else if(getTaskDate(date) - 60000 < new Date(Date.now() + 3600000)){ //dodaj godzinę i odejmij 1 minutę, do Date.now() trzeba też dodać godzinę
-      {settings.Language == 1 ?  Alert.alert('Niepoprawna data przypomnienia', 'Należy wybrać datę przypomnienia co najmniej 1 minutę póżniej niż aktualna godzina!') : Alert.alert('Invalid reminder date', 'Please select a reminder date at least 1 minute later than the current time!')};
+    else if(getTaskDate(date) < new Date(Date.now() + 3600000)){ //do Date.now() trzeba też dodać godzinę
+      if(settings.Language == 1)
+      {
+        Alert.alert('Niepoprawna data przypomnienia', 'Wybrana data przypomnienia wygasła, czy mimo to chcesz kontynować?',
+        [
+          {
+            text: "TAK",
+            onPress: (updateTask),
+            style: "cancel"
+          },
+          { text: "NIE" }
+        ])
+      }
+      else if(settings.Language == 2){
+        Alert.alert('Invalid reminder date', 'Selected reminder date has expired, do you want to continue anyway?',
+        [
+          {
+            text: "YES",
+            onPress: (updateTask),
+            style: "cancel"
+          },
+          { text: "NO" }
+        ])
+      }
     }
     else{
-      try{
-        var Task ={
-          ID: taskID,
-          Title: title,
-          Description: description,
-          IsTaskRecc: isTaskRecc,
-          Date: typeof date == "string" ? date : toLocaleISOString(date),
-          Done: false,
-          Priority: priority,
-        }
-        let newTasks = [...tasks, Task];
-
-        AsyncStorage.setItem('Tasks', JSON.stringify(newTasks))
-        .then(() => {
-          dispatch(setTasks(newTasks));
-          {settings.Language == 1 ?
-          Alert.alert('Nowe zadanie', title) :
-          Alert.alert('New Task', title)};
-          onCreateTriggerNotification()
-          navigation.goBack();
-        })
-        .catch(err => console.log(err))
-      }
-      catch(error){
-        console.log(error);
-      }
+      updateTask();
     }
   }
 

@@ -232,7 +232,7 @@ else{
                   styles.ItemTitle]}
                 >
                   <FontAwesome5
-                    name = 'clock'
+                    name = 'bell'
                     size = {20} /> {item.Date.slice(11,16)}
                 </Text>
                 <Text

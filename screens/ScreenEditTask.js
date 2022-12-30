@@ -256,48 +256,19 @@ async function onCreateTriggerNotification() {
       type: TriggerType.TIMESTAMP,
       timestamp: date.getTime(),
     };
-    /*if(showNotification){
-      if(settings.Language == 1){
-        Alert.alert(
-          "Powiadomienia",
-          "Aby otrzymać powiadomienia o zadaniach należy zezwolić aplikacji na Autostart. Dotyczy to niektórych producentów telefonów np. Xiaomi",
-          [
-            {
-              text: "ZEZWÓL",
-              onPress: () => {Linking.openSettings();},
-            },
-            {
-              text: "NIE POKAZUJ PONOWNIE",
-              onPress: () => {setShowNotification(false)},
-              style: "cancel"
-            },
-            { text: "ANULUJ" }
-          ]
-        );
-      }
-      else if (settings.Language == 2){
-        Alert.alert(
-          "Notifications",
-          "To receive task notifications, you must allow the application to Autostart. This applies to some phone manufacturers, e.g. Xiaomi.",
-          [
-            {
-              text: "ALLOW",
-              onPress: () => {Linking.openSettings();},
-            },
-            {
-              text: "DON'T SHOW AGAIN",
-              onPress: () => {setShowNotification(false);},
-              style: "cancel"
-            },
-            { text: "CANCEL" }
-          ]
-        );
-      }
-  }*/
+
+  if(settings.Language == 1){
+    var name = 'Powiadomienia o zadaniach ';
+    var del = 'Usuń';
+  }
+  else if (settings.Language == 2){
+    var name = 'Notifications about tasks ';
+    var del = 'Delete';
+  }
 
    const channelId = await notifee.createChannel({
     id: 'default',
-    name: 'Przypomnienie o zadaniach ',
+    name: name,
     importance: AndroidImportance.HIGH
   });
 
@@ -313,7 +284,7 @@ async function onCreateTriggerNotification() {
         largeIcon: priority==1 ? require('../Icons/priorityL.png') : priority==2 ? require('../Icons/priorityM.png') : require('../Icons/priorityM.png'),
         actions: [
           {
-            title: 'Usuń',
+            title: del,
             pressAction: {
               id: 'mark-as-read',
             },
@@ -429,52 +400,77 @@ const deleteTask = (id) => {
     }
   }
 
+  // zaktualizuj zadanie
+  const updateTask = () => {
+    try{
+      var Task ={
+        ID: taskID,
+        Title: title,
+        Description: description,
+        IsTaskRecc: isTaskRecc,
+        Date: typeof date == "string" ? date : toLocaleISOString(date),
+        Done: done,
+        Priority: priority,
+      }
+      const index = tasks.findIndex(task => task.ID === taskID)
+      let newTasks = [];
+      if (index > -1){
+        newTasks = [...tasks];
+        newTasks[index] = Task;
+      }
+      else{
+        newTasks = [...tasks, Task];
+      }
+
+      AsyncStorage.setItem('Tasks', JSON.stringify(newTasks))
+      .then(() => {
+            dispatch(setTasks(newTasks));
+            {settings.Language == 1 ? Alert.alert('Edytowano zadanie', title) : Alert.alert('Task has been edited', title)};
+            if (done === false && getTaskDate(date) > new Date(Date.now() + 3600000))
+              onCreateTriggerNotification()
+            else
+              onDeleteNotification(taskID.toString())
+            navigation.goBack();
+      })
+      .catch(err => console.log(err))
+    }
+    catch(error){
+      console.log(error);
+    }
+  }
+
   // ustaw zadanie
   const setTask = () => {
     if(title.length == 0){
-      {settings.Language == 1 ? Alert.alert('Niepoprawna nazwa','Pole nazwa nie może być puste!') : Alert.alert('Invalid Title','The Title field cannot be empty!')};
+      {settings.Language == 1 ? Alert.alert('Niepoprawna nazwa','Pole Nazwa nie może być puste!') : Alert.alert('Invalid Title','The Title field cannot be empty!')};
     }
-    else if(getTaskDate(date) - 60000 < new Date(Date.now() + 3600000)){ //dodaj godzinę i odejmij 1 minutę, do Date.now() trzeba też dodać godzinę
-      {settings.Language == 1 ?  Alert.alert('Niepoprawna data przypomnienia', 'Należy wybrać datę przypomnienia co najmniej 1 minutę póżniej niż aktualna godzina!') : Alert.alert('Invalid reminder date', 'Please select a reminder date at least 1 minute later than the current time!')};
+    else if(getTaskDate(date) < new Date(Date.now() + 3600000)){ //do Date.now() trzeba też dodać godzinę
+      if(settings.Language == 1)
+      {
+        Alert.alert('Niepoprawna data przypomnienia', 'Wybrana data przypomnienia wygasła, czy mimo to chcesz kontynować?',
+        [
+          {
+            text: "TAK",
+            onPress: (updateTask),
+            style: "cancel"
+          },
+          { text: "NIE" }
+        ])
       }
-      else{
-        try{
-          var Task ={
-            ID: taskID,
-            Title: title,
-            Description: description,
-            IsTaskRecc: isTaskRecc,
-            Date: typeof date == "string" ? date : toLocaleISOString(date),
-            Done: done,
-            Priority: priority,
-          }
-          const index = tasks.findIndex(task => task.ID === taskID)
-          let newTasks = [];
-          if (index > -1){
-            newTasks = [...tasks];
-            newTasks[index] = Task;
-          }
-          else{
-            newTasks = [...tasks, Task];
-          }
-
-          AsyncStorage.setItem('Tasks', JSON.stringify(newTasks))
-          .then(() => {
-                dispatch(setTasks(newTasks));
-                {settings.Language == 1 ?
-                  Alert.alert('Edytowano zadanie', title) :
-                  Alert.alert('Task has been edited', title)};
-                if (done === false)
-                  onCreateTriggerNotification()
-                else
-                  onDeleteNotification(taskID.toString())
-                navigation.goBack();
-          })
-          .catch(err => console.log(err))
-        }
-        catch(error){
-          console.log(error);
-        }
+      else if(settings.Language == 2){
+        Alert.alert('Invalid reminder date', 'Selected reminder date has expired, do you want to continue anyway?',
+        [
+          {
+            text: "YES",
+            onPress: (updateTask),
+            style: "cancel"
+          },
+          { text: "NO" }
+        ])
+      }
+    }
+    else{
+      updateTask();
     }
   }
 
