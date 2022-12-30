@@ -57,10 +57,14 @@ async function onCreateTriggerNotification() {
     };
 
     if(settings.Language == 1){
-      var name = 'Przypomnienie o zadaniach ';
+      var name = 'Powiadomienia o zadaniach ';
+      var del = 'Usuń';
+      var setAsDone = 'Ustaw jako wykonane';
     }
     else if (settings.Language == 2){
       var name = 'Notifications about tasks ';
+      var del = 'Delete';
+      var setAsDone = 'Set as done';
     }
 
    const channelId = await notifee.createChannel({
@@ -81,11 +85,17 @@ async function onCreateTriggerNotification() {
         largeIcon: priority==1 ? require('../Icons/priorityL.png') : priority==2 ? require('../Icons/priorityM.png') : require('../Icons/priorityH.png'),
         actions: [
           {
-            title: 'Usuń',
+            title: del,
             pressAction: {
               id: 'mark-as-read',
             },
           },
+          {
+            title: setAsDone,
+            pressAction: {
+              id: 'set-as-done',
+            },
+          }
         ],
       },
     },
@@ -182,7 +192,7 @@ async function onCreateTriggerNotification() {
   // zaktualizuj zadanie
   const updateTask = () => {
     try{
-      var Task ={
+      var Task = {
         ID: taskID,
         Title: title,
         Description: description,

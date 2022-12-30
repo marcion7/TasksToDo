@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
-import { Text, View, TouchableOpacity, StatusBar, Alert, SectionList, Button } from 'react-native';
+import { Text, View, TouchableOpacity, StatusBar, Alert, SectionList } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { setTaskID, setTasks, groupBy, setSettings } from '../redux/actions';
 import { Picker } from '@react-native-picker/picker';
@@ -8,6 +8,8 @@ import * as Progress from 'react-native-progress';
 import notifee from '@notifee/react-native';
 
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+
+import { tasksToSetDone } from '../index';
 
 import { styles }from '../GlobalStyle';
 
@@ -65,7 +67,7 @@ export default function ScreenMain( {navigation} ){
   const [TasksDateFilterIndex, setTasksDateFilterIndex] = useState(1);
 
   useEffect(() => {
-    getTasks();
+    setTaskAsDone();
     getSettings();
   }, [])
 
@@ -99,6 +101,25 @@ const getSettings = () => {
     }
   })
   .catch(err => console.log(err))
+}
+
+// ustaw zadania, które użytkownik kliknął w powiadomieniu jako wykonane
+const setTaskAsDone = () => {
+  if(tasksToSetDone.length > 0){
+    for(let i = 0; i < tasksToSetDone.length; i++){
+      const index = tasks.findIndex(task => task.ID === tasksToSetDone[i]);
+      if (index > -1) {
+        let newTasks = [...tasks];
+        newTasks[index].Done = true;
+        AsyncStorage.setItem('Tasks', JSON.stringify(newTasks))
+          .then(() => {
+            dispatch(setTasks(newTasks));
+          })
+          .catch(err => console.log(err))
+      }
+    }
+  } 
+getTasks();
 }
 
 // pobierz zadania
@@ -151,7 +172,7 @@ const deleteTask = (id) => {
         onDeleteNotification('taskID')
       })
       .catch(err => console.log(err))
-  }    
+  }
 
  const filterTasks = () => {
   if(FilterPriority !== '' && FilterDone !== '')
@@ -165,7 +186,7 @@ const deleteTask = (id) => {
   return Object.keys(filtered).map((key)=> ({key: key, data: filtered[key]}));
 }
 
- const filteredTasks = filterTasks();
+ var filteredTasks = filterTasks();
 
  // sortowanie dni chronologicznie
  filteredTasks.sort((a, b) => new Date(a.key).getTime() - new Date(b.key).getTime());

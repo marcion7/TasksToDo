@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, StatusBar, TextInput, Alert, Linking, ScrollView} from 'react-native';
+import { Text, View, TouchableOpacity, StatusBar, TextInput, Alert, ScrollView} from 'react-native';
 import Checkbox from 'expo-checkbox';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useDispatch, useSelector } from 'react-redux';
@@ -260,10 +260,12 @@ async function onCreateTriggerNotification() {
   if(settings.Language == 1){
     var name = 'Powiadomienia o zadaniach ';
     var del = 'Usuń';
+    var setAsDone = 'Ustaw jako wykonane';
   }
   else if (settings.Language == 2){
     var name = 'Notifications about tasks ';
     var del = 'Delete';
+    var setAsDone = 'Set as done';
   }
 
    const channelId = await notifee.createChannel({
@@ -287,8 +289,14 @@ async function onCreateTriggerNotification() {
             title: del,
             pressAction: {
               id: 'mark-as-read',
-            },
+            }
           },
+          {
+            title: setAsDone,
+            pressAction: {
+              id: 'set-as-done',
+            },
+          }
         ],
       },
     },
@@ -339,6 +347,7 @@ async function onCreateTriggerNotification() {
         title: 'Edit Task'
       });
     }
+    console.log(taskID)
   }, [])
 
   // alert o usuwaniu zadania
