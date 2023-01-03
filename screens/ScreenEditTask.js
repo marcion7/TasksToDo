@@ -257,16 +257,16 @@ async function onCreateTriggerNotification() {
       timestamp: date.getTime(),
     };
 
-  if(settings.Language == 1){
-    var name = 'Powiadomienia o zadaniach ';
-    var del = 'Usuń';
-    var setAsDone = 'Ustaw jako wykonane';
-  }
-  else if (settings.Language == 2){
-    var name = 'Notifications about tasks ';
-    var del = 'Delete';
-    var setAsDone = 'Set as done';
-  }
+    if(settings.Language == 1){
+      var name = 'Powiadomienia o zadaniach ';
+      var view = 'Wyświetl';
+      var setAsDone = 'Ustaw jako wykonane';
+    }
+    else if (settings.Language == 2){
+      var name = 'Notifications about tasks ';
+      var view = 'View';
+      var setAsDone = 'Set as done';
+    }
 
    const channelId = await notifee.createChannel({
     id: 'default',
@@ -286,10 +286,10 @@ async function onCreateTriggerNotification() {
         largeIcon: priority==1 ? require('../Icons/priorityL.png') : priority==2 ? require('../Icons/priorityM.png') : require('../Icons/priorityM.png'),
         actions: [
           {
-            title: del,
+            title: view,
             pressAction: {
-              id: 'mark-as-read',
-            }
+              id: 'default',
+            },
           },
           {
             title: setAsDone,
@@ -347,7 +347,6 @@ async function onCreateTriggerNotification() {
         title: 'Edit Task'
       });
     }
-    console.log(taskID)
   }, [])
 
   // alert o usuwaniu zadania

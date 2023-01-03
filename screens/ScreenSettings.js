@@ -91,7 +91,7 @@ export default function ScreenSettings(){
           <View style={{flexDirection: 'row', alignItems: 'center'}}>
             <Text style={{fontSize: 25, marginTop: 10, marginRight: 10, color: settings.DarkMode==false ? 'black' : 'white'  }}>{settings.Language == 1 ? "Język" : "Language"}</Text>
             <DropDownPicker
-              containerStyle={{width: '26%', marginTop: 10}}
+              containerStyle={{width: '30%', marginTop: 10}}
               open={showlanguage}
               value={language}
               items={LanguageOptions}

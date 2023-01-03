@@ -9,7 +9,7 @@ import notifee from '@notifee/react-native';
 
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 
-import { tasksToSetDone } from '../index';
+//import { tasksToSetDone } from '../index';
 
 import { styles }from '../GlobalStyle';
 
@@ -51,7 +51,6 @@ export const setNextID = (array) => {
       break;
     }
   }
- // console.log(array)
   return id;
 }
 
@@ -64,18 +63,15 @@ export default function ScreenMain( {navigation} ){
   const [showFilters, setShowFilters] = useState(false);
   const [FilterPriority, setFilterPriority] = useState('');
   const [FilterDone, setFilterDone] = useState('');
-  const [TasksDateFilterIndex, setTasksDateFilterIndex] = useState(1);
+  const [TasksDateFilterIndex, setTasksDateFilterIndex] = useState(0);
+
+  var myModule = require('../index');
+  var tasksToSetDone = myModule.tasksToSetDone;
 
   useEffect(() => {
-    setTaskAsDone();
+    setTaskAsDone(tasksToSetDone);
     getSettings();
   }, [])
-
-//co minute pobieraj zadania
-/*  setInterval(function() {
-    getTasks();
-}, 60 * 1000); // 60 * 1000 milsec
-*/
 
 if (settings.Language == 1){
   var days = ['Niedziela','Poniedziałek','Wtorek','Środa','Czwartek','Piątek','Sobota'];
@@ -230,7 +226,7 @@ for (let i = 0; i < filteredTasks.length; i++){
     case 2:
       return oldTasks;
     default:
-      return activeTasks;
+      return filteredTasks;
   }
 }
 

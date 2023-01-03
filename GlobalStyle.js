@@ -24,7 +24,7 @@ import { StyleSheet } from 'react-native';
       position: 'absolute',
       bottom: 30,
       right: 30,
-      width: 70,
+      width: '17%',
       alignItems: 'center',
       borderRadius: 100,
       backgroundColor: 'blue',

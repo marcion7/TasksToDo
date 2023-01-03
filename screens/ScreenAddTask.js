@@ -50,57 +50,56 @@ export default function ScreenAddTask({navigation}){
 
   // zaplanuj powiadomienie
 async function onCreateTriggerNotification() {
+  const trigger: TimestampTrigger = {
+    type: TriggerType.TIMESTAMP,
+    timestamp: date.getTime(),
+  };
 
-    const trigger: TimestampTrigger = {
-      type: TriggerType.TIMESTAMP,
-      timestamp: date.getTime(),
-    };
+  if(settings.Language == 1){
+    var name = 'Powiadomienia o zadaniach ';
+    var view = 'Wyświetl';
+    var setAsDone = 'Ustaw jako wykonane';
+  }
+  else if (settings.Language == 2){
+    var name = 'Notifications about tasks ';
+    var view = 'View';
+    var setAsDone = 'Set as done';
+  }
 
-    if(settings.Language == 1){
-      var name = 'Powiadomienia o zadaniach ';
-      var del = 'Usuń';
-      var setAsDone = 'Ustaw jako wykonane';
-    }
-    else if (settings.Language == 2){
-      var name = 'Notifications about tasks ';
-      var del = 'Delete';
-      var setAsDone = 'Set as done';
-    }
+ const channelId = await notifee.createChannel({
+  id: 'default',
+  name: name,
+  importance: AndroidImportance.HIGH
+});
 
-   const channelId = await notifee.createChannel({
-    id: 'default',
-    name: name,
-    importance: AndroidImportance.HIGH
-  });
-
-  // Create a trigger notification
-  await notifee.createTriggerNotification(
-    {
-      id: taskID.toString(),
-      title: title,
-      body: description,
-      android: {
-        channelId: channelId,
-        color: '#2d53a6',
-        largeIcon: priority==1 ? require('../Icons/priorityL.png') : priority==2 ? require('../Icons/priorityM.png') : require('../Icons/priorityH.png'),
-        actions: [
-          {
-            title: del,
-            pressAction: {
-              id: 'mark-as-read',
-            },
+// Create a trigger notification
+await notifee.createTriggerNotification(
+  {
+    id: taskID.toString(),
+    title: title,
+    body: description,
+    android: {
+      channelId: channelId,
+      color: '#2d53a6',
+      largeIcon: priority==1 ? require('../Icons/priorityL.png') : priority==2 ? require('../Icons/priorityM.png') : require('../Icons/priorityM.png'),
+      actions: [
+        {
+          title: view,
+          pressAction: {
+            id: 'default',
           },
-          {
-            title: setAsDone,
-            pressAction: {
-              id: 'set-as-done',
-            },
-          }
-        ],
-      },
+        },
+        {
+          title: setAsDone,
+          pressAction: {
+            id: 'set-as-done',
+          },
+        }
+      ],
     },
-    trigger,
-  );
+  },
+  trigger,
+);
 }
 
 // jezeli lista zadań jest pusta wyświetl komunikat o powiadomieniach
@@ -108,7 +107,7 @@ async function onCreateTriggerNotification() {
     if(settings.Language == 1)
     Alert.alert(
       "Powiadomienia",
-      "Aby otrzymać powiadomienia o zadaniach należy zezwolić aplikacji na Autostart. Dotyczy to niektórych producentów telefonów np. Xiaomi.",
+      "Na telefonach niektórych producentów np. Xiaomi, powiadomienia mogą nie zostać wyświetlone. W takim wypadku należy zezwolić aplikacji na Autostart lub zmienić ustawienia oszczędzania energii.",
       [
         {
           text: "ZEZWÓL",
@@ -120,7 +119,7 @@ async function onCreateTriggerNotification() {
     else if (settings.Language == 2){
       Alert.alert(
         "Notifications",
-        "To receive task notifications, you must allow the application to Autostart. This applies to some phone manufacturers, e.g. Xiaomi.",
+        "On phones from some manufacturers, e.g. Xiaomi, notifications may not be displayed. In this case, allow the application to Autostart or change the energy saving settings.",
         [
           {
             text: "ALLOW",
