@@ -10,7 +10,7 @@ import notifee, { EventType } from '@notifee/react-native';
 
 notifee.onBackgroundEvent(async ({ type, detail }) => {
   
-    // Check if the user pressed the "Mark as read" action
+    // Check if the user pressed the "set-as-done" action
     if (type === EventType.ACTION_PRESS && detail.pressAction.id === 'set-as-done') {
       tasksToSetDone.push(parseInt(detail.notification.id));
     }

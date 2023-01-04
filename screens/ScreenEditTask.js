@@ -219,14 +219,13 @@ export default function ScreenEditTask({navigation}){
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [isTaskRecc, setTaskRecc] = useState(false);
+  const [taskReccID, setTaskReccID] = useState(null);
   const [done, setDone] = useState(false);
   const [priority, setPriority] = useState(1);
   
-  //const -> var
   const [date, setTaskDate] = useState(new Date());
   const [showDate, setShowDate] = useState(false);
   const [showTime, setShowTime] = useState(false);
-  const [showNotification, setShowNotification] = useState(true);
 
   const [TaskReccStartDate, setTaskStartDate] = useState(new Date());
   const [showStartDate, setShowStartDate] = useState(false);
@@ -251,7 +250,7 @@ export default function ScreenEditTask({navigation}){
   const dispatch = useDispatch();
 
 // zaplanuj powiadomienie
-async function onCreateTriggerNotification() {
+async function onCreateTriggerNotification(date, taskID) {
     const trigger: TimestampTrigger = {
       type: TriggerType.TIMESTAMP,
       timestamp: date.getTime(),
@@ -337,59 +336,8 @@ async function onCreateTriggerNotification() {
 
   useEffect(() => {
     getTask();
-    if (settings.Language == 1){
-      navigation.setOptions({
-        title: 'Edytuj zadanie'
-      });
-    }
-    else{
-      navigation.setOptions({
-        title: 'Edit Task'
-      });
-    }
+    console.log(taskID)
   }, [])
-
-  // alert o usuwaniu zadania
-  const showConfirmDialog = ( id, title ) =>
-  {settings.Language == 1 ? 
-    Alert.alert(
-    "Czy chcesz usunąć to zadanie?",
-    title,
-    [
-      {
-        text: "TAK",
-        onPress: () => {deleteTask(id)},
-        style: "cancel"
-      },
-      { text: "NIE" }
-    ]
-  )
-  :
-  Alert.alert(
-    "Do you want to delete this task?",
-    title,
-    [
-      {
-        text: "YES",
-        onPress: () => {deleteTask(id)},
-        style: "cancel"
-      },
-      { text: "NO" }
-    ]
-  );
-  }
-
-// usuń zadanie
-const deleteTask = (id) => {
-  const filteredTasks = tasks.filter(task => task.ID !== id);
-  AsyncStorage.setItem('Tasks', JSON.stringify(filteredTasks))
-    .then(() =>{
-      dispatch(setTasks(filteredTasks));
-      onDeleteNotification(taskID.toString())
-      navigation.goBack();
-    })
-    .catch(err => console.log(err))
-}
 
   // pobierz zadanie
   const getTask = () => {
@@ -402,44 +350,276 @@ const deleteTask = (id) => {
       setTitle(Task.Title);
       setDescription(Task.Description);
       setTaskRecc(Task.IsTaskRecc);
+      setTaskReccID(Task.TaskReccID);
       setTaskDate(correctData)
       setDone(Task.Done);
       setPriority(Task.Priority);
     }
+    if (settings.Language == 1){
+      if(Task.IsTaskRecc){
+        navigation.setOptions({
+        title: 'Edytuj zadanie cykliczne'
+        });  
+      }
+      else{
+        navigation.setOptions({
+        title: 'Edytuj zadanie'
+        });
+      }
+    }
+    else{
+      if(Task.IsTaskRecc){
+        navigation.setOptions({
+        title: 'Edit Reccuring Task'
+        });  
+      }
+      else{
+        navigation.setOptions({
+        title: 'Edit Task'
+        });
+      }
+    }
   }
 
+
+// alert o usuwaniu zadania
+const showConfirmDialogDelete = ( id, title, isrecc, reccid ) => {
+  if(isrecc == false){
+      {settings.Language == 1 ? 
+      Alert.alert(
+      "Czy chcesz usunąć to zadanie?",
+      title,
+      [
+        {
+          text: "TAK",
+          onPress: () => {deleteTask(id)},
+          style: "cancel"
+        },
+        { text: "NIE" }
+      ]
+    )
+    :
+    Alert.alert(
+      "Do you want to delete this task?",
+      title,
+      [
+        {
+          text: "YES",
+          onPress: () => {deleteTask(id)},
+          style: "cancel"
+        },
+        { text: "NO" }
+      ]
+    );}
+  }
+  else{
+    {settings.Language == 1 ? 
+      Alert.alert(
+      "Czy chcesz usunąć to zadanie cykliczne?",
+      title,
+      [
+        {
+          text: "TAK, WSZYSTKIE",
+          onPress: () => {deleteTask(id, reccid)},
+        },
+        {
+          text: "TYLKO TE",
+          onPress: () => {deleteTask(id)},
+          style: "cancel"
+        },
+        { text: "NIE" }
+      ]
+    )
+    :
+    Alert.alert(
+      "Do you want to delete this reccuring task?",
+      title,
+      [
+        {
+          text: "YES, ALL",
+          onPress: () => {deleteTask(id, reccid)},
+        },
+        {
+          text: "ONLY THIS",
+          onPress: () => {deleteTask(id)},
+          style: "cancel"
+        },
+        { text: "NO" }
+      ]
+    );}  
+  }
+}
+
+  // usuń zadanie
+  const deleteTask = (id, reccID=null) => {
+    if(reccID == null){
+      const filteredTasks = tasks.filter(task => task.ID !== id);
+      AsyncStorage.setItem('Tasks', JSON.stringify(filteredTasks))
+        .then(() =>{
+            onDeleteNotification(id.toString())
+            dispatch(setTasks(filteredTasks));
+            navigation.goBack();
+          }
+        )
+        .catch(err => console.log(err))
+    }
+    else{
+      const reccTasksWithSameID = tasks.filter(task => task.TaskReccID === reccID);
+      for(let i = 0; i < reccTasksWithSameID.length; i++){
+        onDeleteNotification(reccTasksWithSameID[i].ID.toString())
+      }
+      const filteredTasks = tasks.filter(task => task.TaskReccID !== reccID);
+      AsyncStorage.setItem('Tasks', JSON.stringify(filteredTasks))
+      .then(() =>{
+        dispatch(setTasks(filteredTasks));
+        navigation.goBack();
+      }
+    )
+    .catch(err => console.log(err))
+    }
+}
+
+// alert o usuwaniu zadania
+const showConfirmDialogUpdate = ( title, isrecc ) => {
+  if(isrecc){
+    {settings.Language == 1 ? 
+      Alert.alert(
+      "Czy chcesz edytować to zadanie cykliczne?",
+      title,
+      [
+        {
+          text: "TAK, WSZYSTKIE",
+          onPress: () => {updateTaskRecc()},
+        },
+        {
+          text: "TYLKO TE",
+          onPress: () => {updateTask()},
+          style: "cancel"
+        },
+        { text: "NIE" }
+      ]
+    )
+    :
+    Alert.alert(
+      "Do you want to edit this reccuring task?",
+      title,
+      [
+        {
+          text: "YES, ALL",
+          onPress: () => {updateTaskRecc()},
+        },
+        {
+          text: "ONLY THIS",
+          onPress: () => {updateTask()},
+          style: "cancel"
+        },
+        { text: "NO" }
+      ]
+    );}  
+  }
+  else{
+    {settings.Language == 1 ? 
+      Alert.alert(
+      "Czy chcesz edytować to zadanie?",
+      title,
+      [
+        {
+          text: "TAK",
+          onPress: () => {updateTask()},
+          style: "cancel"
+        },
+        { text: "NIE" }
+      ]
+    )
+    :
+    Alert.alert(
+      "Do you want to edit this task?",
+      title,
+      [
+        {
+          text: "YES",
+          onPress: () => {updateTask()},
+          style: "cancel"
+        },
+        { text: "NO" }
+      ]
+    );}  
+  }
+}
+  
   // zaktualizuj zadanie
   const updateTask = () => {
-    try{
+    let newTasks = [];
+    newTasks = [...tasks];
+      try{
+        var Task ={
+          ID: taskID,
+          Title: title,
+          Description: description,
+          IsTaskRecc: isTaskRecc,
+          TaskReccID: taskReccID,
+          Date: typeof date == "string" ? date : toLocaleISOString(date),
+          Done: done,
+          Priority: priority,
+        }
+        const index = tasks.findIndex(task => task.ID === taskID)
+        newTasks[index] = Task;
+
+        AsyncStorage.setItem('Tasks', JSON.stringify(newTasks))
+        .then(() => {
+              dispatch(setTasks(newTasks));
+              {settings.Language == 1 ? Alert.alert('Edytowano zadanie', title) : Alert.alert('Task has been edited', title)};
+              if (done === false && getTaskDate(date) > new Date(Date.now() + 3600000))
+                onCreateTriggerNotification(date, taskID)
+              else
+                onDeleteNotification(taskID.toString())
+              navigation.goBack();
+        })
+        .catch(err => console.log(err))
+      }
+      catch(error){
+        console.log(error);
+      }
+  }
+
+const updateTaskRecc = () => {
+  let newTasks = [];
+  newTasks = [...tasks];
+  const reccTasksWithSameID = tasks.filter(task => task.TaskReccID === taskReccID);
+  for(let i = 0; i < reccTasksWithSameID.length; i++){
+    var time = 60000;
+    if (i == 0){
+      var nextDate = getTaskDate(date) - 3600000 + time;
+    }
+    else{
+      nextDate += time;
+    }
+    
       var Task ={
-        ID: taskID,
+        ID: reccTasksWithSameID[i].ID,
         Title: title,
         Description: description,
-        IsTaskRecc: isTaskRecc,
-        Date: typeof date == "string" ? date : toLocaleISOString(date),
+        IsTaskRecc: reccTasksWithSameID[i].IsTaskRecc,
+        TaskReccID: taskReccID,
+        Date: toLocaleISOString(new Date(nextDate)),
         Done: done,
         Priority: priority,
       }
-      const index = tasks.findIndex(task => task.ID === taskID)
-      let newTasks = [];
-      if (index > -1){
-        newTasks = [...tasks];
-        newTasks[index] = Task;
-      }
-      else{
-        newTasks = [...tasks, Task];
-      }
-
+      const index = tasks.findIndex(task => task.ID === reccTasksWithSameID[i].ID)
+      newTasks[index] = Task;
+      if (reccTasksWithSameID[i].done === false && getTaskDate(new Date(nextDate)) > new Date(Date.now() + 3600000))
+        onCreateTriggerNotification(new Date(nextDate), reccTasksWithSameID[i].ID)
+      else
+        onDeleteNotification(reccTasksWithSameID[i].ID.toString())
+    }
+    try{
       AsyncStorage.setItem('Tasks', JSON.stringify(newTasks))
       .then(() => {
-            dispatch(setTasks(newTasks));
-            {settings.Language == 1 ? Alert.alert('Edytowano zadanie', title) : Alert.alert('Task has been edited', title)};
-            if (done === false && getTaskDate(date) > new Date(Date.now() + 3600000))
-              onCreateTriggerNotification()
-            else
-              onDeleteNotification(taskID.toString())
-            navigation.goBack();
-      })
+        {settings.Language == 1 ? Alert.alert('Edytowano zadanie cykliczne', title) : Alert.alert('Reccuring Task has been edited', title)};
+        dispatch(setTasks(newTasks));
+        navigation.goBack();
+      }
+      )
       .catch(err => console.log(err))
     }
     catch(error){
@@ -459,7 +639,7 @@ const deleteTask = (id) => {
         [
           {
             text: "TAK",
-            onPress: (updateTask),
+            onPress: (showConfirmDialogUpdate( title )),
             style: "cancel"
           },
           { text: "NIE" }
@@ -470,7 +650,7 @@ const deleteTask = (id) => {
         [
           {
             text: "YES",
-            onPress: (updateTask),
+            onPress: (showConfirmDialogUpdate( title )),
             style: "cancel"
           },
           { text: "NO" }
@@ -478,7 +658,7 @@ const deleteTask = (id) => {
       }
     }
     else{
-      updateTask();
+      showConfirmDialogUpdate( title );
     }
   }
 
@@ -538,7 +718,7 @@ const deleteTask = (id) => {
           <Checkbox
             style={styles.checkbox} 
             value={isTaskRecc} 
-            onValueChange={setTaskRecc}
+            disabled={true}
           />
         <Text style={[styles.TaskLabel, {color: settings.DarkMode == false ? 'black' : 'white'}]}>{settings.Language == 1 ?'  Cykliczne' : '  Reccuring'}</Text>
       </Text>
@@ -649,13 +829,13 @@ const deleteTask = (id) => {
       <View style={styles.Buttons}>
         <TouchableOpacity 
           style={styles.EditTask}
-          onPress={setTask}
+          onPress={() => showConfirmDialogUpdate( title, isTaskRecc )}
           >
           <Text style={styles.ButtonAdd}>{settings.Language == 1 ? 'Edytuj' : 'Edit'}</Text>
         </TouchableOpacity>
         <TouchableOpacity 
           style={styles.DeleteTask}
-          onPress={() => showConfirmDialog( taskID, title )}
+          onPress={() => showConfirmDialogDelete( taskID, title, isTaskRecc, taskReccID )}
           >
           <Text style={styles.ButtonAdd}>{settings.Language == 1 ? 'Usuń' : 'Delete'}</Text>
         </TouchableOpacity>

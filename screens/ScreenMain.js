@@ -35,10 +35,15 @@ export function countDoneTasks(tasks){
  }
 
  // funkcja do wybierania następnego id dla Tasku
-export const setNextID = (array) => {
+export const setNextID = (array, IDtype) => {
   const ids = new Set()
   for (let i = 0; i < array.length; i++) {
-    ids.add(array[i].ID);
+    if(IDtype == 'ID'){
+      ids.add(array[i].ID);
+    }
+    else if(IDtype == 'RECCID'){
+      ids.add(array[i].TaskReccID);
+    }  
   }
 
   var id = 1
@@ -130,45 +135,100 @@ const getTasks = () => {
   .catch(err => console.log(err))
 }
 
-const showConfirmDialog = ( id, title ) =>
-{settings.Language == 1 ? 
-  Alert.alert(
-  "Czy chcesz usunąć to zadanie?",
-  title,
-  [
-    {
-      text: "TAK",
-      onPress: () => {deleteTask(id)},
-      style: "cancel"
-    },
-    { text: "NIE" }
-  ]
-)
-:
-Alert.alert(
-  "Do you want to delete this task?",
-  title,
-  [
-    {
-      text: "YES",
-      onPress: () => {deleteTask(id)},
-      style: "cancel"
-    },
-    { text: "NO" }
-  ]
-);
+// alert o usuwaniu zadania
+const showConfirmDialog = ( id, title, isrecc, reccid ) => {
+  if(isrecc == false){
+      {settings.Language == 1 ? 
+      Alert.alert(
+      "Czy chcesz usunąć to zadanie?",
+      title,
+      [
+        {
+          text: "TAK",
+          onPress: () => {deleteTask(id)},
+          style: "cancel"
+        },
+        { text: "NIE" }
+      ]
+    )
+    :
+    Alert.alert(
+      "Do you want to delete this task?",
+      title,
+      [
+        {
+          text: "YES",
+          onPress: () => {deleteTask(id)},
+          style: "cancel"
+        },
+        { text: "NO" }
+      ]
+    );}
+  }
+  else{
+    {settings.Language == 1 ? 
+      Alert.alert(
+      "Czy chcesz usunąć to zadanie cykliczne?",
+      title,
+      [
+        {
+          text: "TAK, WSZYSTKIE",
+          onPress: () => {deleteTask(id, reccid)},
+        },
+        {
+          text: "TYLKO TE",
+          onPress: () => {deleteTask(id)},
+          style: "cancel"
+        },
+        { text: "NIE" }
+      ]
+    )
+    :
+    Alert.alert(
+      "Do you want to delete this reccuring task?",
+      title,
+      [
+        {
+          text: "YES, ALL",
+          onPress: () => {deleteTask(id, reccid)},
+        },
+        {
+          text: "ONLY THIS",
+          onPress: () => {deleteTask(id)},
+          style: "cancel"
+        },
+        { text: "NO" }
+      ]
+    );}  
+  }
 }
-
-// usuń zadanie
-const deleteTask = (id) => {
-  const filteredTasks = tasks.filter(task => task.ID !== id);
-    AsyncStorage.setItem('Tasks', JSON.stringify(filteredTasks))
+  
+  // usuń zadanie
+  const deleteTask = (id, reccID=null) => {
+    if(reccID == null){
+      const filteredTasks = tasks.filter(task => task.ID !== id);
+      AsyncStorage.setItem('Tasks', JSON.stringify(filteredTasks))
+        .then(() =>{
+            onDeleteNotification(id.toString())
+            dispatch(setTasks(filteredTasks));
+          }
+        )
+        .catch(err => console.log(err))
+    }
+    else{
+      const reccTasksWithSameID = tasks.filter(task => task.TaskReccID === reccID);
+      for(let i = 0; i < reccTasksWithSameID.length; i++){
+        onDeleteNotification(reccTasksWithSameID[i].ID.toString())
+      }
+      const filteredTasks = tasks.filter(task => task.TaskReccID !== reccID);
+      AsyncStorage.setItem('Tasks', JSON.stringify(filteredTasks))
       .then(() =>{
         dispatch(setTasks(filteredTasks));
-        onDeleteNotification('taskID')
-      })
-      .catch(err => console.log(err))
-  }
+      }
+    )
+    .catch(err => console.log(err))
+    }
+}
 
  const filterTasks = () => {
   if(FilterPriority !== '' && FilterDone !== '')
@@ -390,7 +450,7 @@ for (let i = 0; i < filteredTasks.length; i++){
                 </Text>
               </View>
               <TouchableOpacity
-                onPress={() => showConfirmDialog( item.ID, item.Title )}
+                onPress={() => showConfirmDialog( item.ID, item.Title, item.IsTaskRecc, item.TaskReccID )}
               >
                   <FontAwesome5
                     name = 'trash-alt'
@@ -408,7 +468,7 @@ for (let i = 0; i < filteredTasks.length; i++){
         </View>
         <TouchableOpacity style={styles.AddButton}
           onPress={() => {
-            dispatch(setTaskID(setNextID(tasks)));
+            dispatch(setTaskID(setNextID(tasks, 'ID')));
             navigation.navigate('AddTasks')}
           }
           >

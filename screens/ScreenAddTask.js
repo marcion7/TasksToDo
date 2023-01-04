@@ -13,6 +13,8 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import {pad, toLocaleISOString, getTaskDate,
         RepeatOptions, MonthsOptions, DaysOptions} from './ScreenEditTask';
 
+import { setNextID } from './ScreenMain';
+
 import { styles }from '../GlobalStyle';
 
 export default function ScreenAddTask({navigation}){
@@ -39,17 +41,9 @@ export default function ScreenAddTask({navigation}){
   const [Repeat, setRepeat] = useState(1);
   const [showRepeat, setShowRepeat] = useState(false);
   const [RepeatOptionsValue, setRepeatOptions] = useState(RepeatOptions);
-  
-  const [MonthsRepeat, setMonthsRepeat] = useState([])
-  const [showMonthsRepeat, setShowMonthsRepeat] = useState(false);
-  const [MonthsRepeatValue, setMonthsRepeatOptions] = useState(MonthsOptions);
-  
-  const [DaysRepeat, setDaysRepeat] = useState([])
-  const [showDaysRepeat, setShowDaysRepeat] = useState(false);
-  const [DaysRepeatValue, setDaysRepeatOptions] = useState(DaysOptions);
 
   // zaplanuj powiadomienie
-async function onCreateTriggerNotification() {
+async function onCreateTriggerNotification(date, taskID) {
   const trigger: TimestampTrigger = {
     type: TriggerType.TIMESTAMP,
     timestamp: date.getTime(),
@@ -81,7 +75,7 @@ await notifee.createTriggerNotification(
     android: {
       channelId: channelId,
       color: '#2d53a6',
-      largeIcon: priority==1 ? require('../Icons/priorityL.png') : priority==2 ? require('../Icons/priorityM.png') : require('../Icons/priorityM.png'),
+      largeIcon: priority==1 ? require('../Icons/priorityL.png') : priority==2 ? require('../Icons/priorityM.png') : require('../Icons/priorityH.png'),
       actions: [
         {
           title: view,
@@ -146,8 +140,6 @@ await notifee.createTriggerNotification(
     else
       setTaskRecc(true);
       setShowRepeat(false);
-      setShowMonthsRepeat(false);
-      setShowDaysRepeat(false);
   }
 
   const onStartDateChange = (event, selectedDate) => {
@@ -163,7 +155,6 @@ await notifee.createTriggerNotification(
   };
 
   useEffect(() => {
-    getTask();
     if (settings.Language == 1){
       navigation.setOptions({
         title: 'Nowe zadanie'
@@ -176,52 +167,74 @@ await notifee.createTriggerNotification(
     }
   }, [])
 
-// pobierz zadanie
-  const getTask = () => {
-    const Task = tasks.find(task => task.ID === taskID)
-    if(Task){
-      setTitle(Task.Title);
-      setDescription(Task.Description);
-      setTaskRecc(Task.IsTaskRecc);
-      setTaskDate(Task.Date);
-      setPriority(Task.Priority);
-    }
-  }
-
   // zaktualizuj zadanie
   const updateTask = () => {
-    try{
-      var Task = {
-        ID: taskID,
-        Title: title,
-        Description: description,
-        IsTaskRecc: isTaskRecc,
-        Date: typeof date == "string" ? date : toLocaleISOString(date),
-        Done: false,
-        Priority: priority,
+    var Task = {
+      ID: taskID,
+      Title: title,
+      Description: description,
+      IsTaskRecc: isTaskRecc,
+      TaskReccID: null,
+      Date: typeof date == "string" ? date : toLocaleISOString(date),
+      Done: false,
+      Priority: priority,
+    }
+    let newTasks = [...tasks];
+    if(isTaskRecc == false){
+      try{
+        newTasks.push(Task);
+        AsyncStorage.setItem('Tasks', JSON.stringify(newTasks))
+        .then(() => {
+            if (getTaskDate(date) > new Date(Date.now() + 3600000))
+              onCreateTriggerNotification(new Date(date), taskID)
+            {settings.Language == 1 ? Alert.alert('Nowe zadanie', title) : Alert.alert('New Task', title)};
+            dispatch(setTasks(newTasks));
+            navigation.goBack();
+        })
+        .catch(err => console.log(err))
       }
-      const index = tasks.findIndex(task => task.ID === taskID)
-      let newTasks = [];
-      if (index > -1){
-        newTasks = [...tasks];
-        newTasks[index] = Task;
+      catch(error){
+        console.log(error);
       }
-      else{
-        newTasks = [...tasks, Task];
+    }
+    else{
+      var time = 60000;
+      for (let i = 0; i < 3; i++){
+        if (i == 0){
+          var nextReccID = setNextID(newTasks, 'RECCID');
+          var nextDate = getTaskDate(date) - 3600000 + time;
+        }
+        else{
+          nextDate += time;
+        }
+        var nextID = setNextID(newTasks, 'ID');
+        Task = {
+          ID: nextID,
+          Title: title,
+          Description: description,
+          IsTaskRecc: isTaskRecc,
+          TaskReccID: nextReccID,
+          Date: toLocaleISOString(new Date(nextDate)),
+          Done: false,
+          Priority: priority,
+        }
+        if (getTaskDate(new Date(nextDate)) > new Date(Date.now() + 3600000))
+          onCreateTriggerNotification(new Date(nextDate), nextID)
+        newTasks.push(Task);
       }
-
+      console.log(newTasks)
+      try{
       AsyncStorage.setItem('Tasks', JSON.stringify(newTasks))
       .then(() => {
-            dispatch(setTasks(newTasks));
-            {settings.Language == 1 ? Alert.alert('Nowe zadanie', title) : Alert.alert('New Task', title)};
-            if (getTaskDate(date) > new Date(Date.now() + 3600000))
-              onCreateTriggerNotification()
-            navigation.goBack();
-      })
+          {settings.Language == 1 ? Alert.alert('Nowe zadanie cykliczne', title) : Alert.alert('New Reccuring Task', title)};
+          dispatch(setTasks(newTasks));
+          navigation.goBack();
+       })
       .catch(err => console.log(err))
-    }
-    catch(error){
-      console.log(error);
+        }
+      catch(error){
+        console.log(error);
+      }
     }
   }
 
