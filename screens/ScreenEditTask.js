@@ -5,7 +5,6 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useDispatch, useSelector } from 'react-redux';
 import { setTasks } from '../redux/actions';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import DropDownPicker from 'react-native-dropdown-picker';
 import notifee, { TimestampTrigger, TriggerType, AndroidImportance} from '@notifee/react-native';
 
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
@@ -29,190 +28,10 @@ export function toLocaleISOString(date) {
 // Data w milisekundach
 export const getTaskDate = (date) => {
   const d = new Date(date)
-  d.setTime(d.getTime() + 60 * 60 * 1000) // dodać 1 godzinę
+  d.setTime(d.getTime()) // dodać 1 godzinę
   const dateInMilisec = new Date(d).getTime()
   return dateInMilisec
 }
-
-// DO ZADAŃ CYKLICZNYCH
-export const RepeatOptions = [
-{
-  label: 'Codziennie',
-  value: 1,
-},
-{
-  label: 'W wybrane dni',
-  value: 2,
-},
-{
-  label: 'W wybrane miesiące',
-  value: 3,
-},
-]
-
-export const MonthsOptions = [
-{
-  label: 'Styczeń',
-  value: 1,
-},
-{
-  label: 'Luty',
-  value: 2,
-},
-{
-  label: 'Marzec',
-  value: 3,
-},
-{
-  label: 'Kwiecień',
-  value: 4,
-},
-{
-  label: 'Maj',
-  value: 5,
-},
-{
-  label: 'Czerwiec',
-  value: 6,
-},
-{
-  label: 'Lipiec',
-  value: 7,
-},
-{
-  label: 'Sierpień',
-  value: 8,
-},
-{
-  label: 'Wrzesień',
-  value: 9,
-},
-{
-  label: 'Październik',
-  value: 10,
-},
-{
-  label: 'Listopad',
-  value: 11,
-},
-{
-  label: 'Grudzień',
-  value: 12,
-}
-]
-
-export const MonthsOptionsEN = [
-  {
-    label: 'January',
-    value: 1,
-  },
-  {
-    label: 'February',
-    value: 2,
-  },
-  {
-    label: 'March',
-    value: 3,
-  },
-  {
-    label: 'April',
-    value: 4,
-  },
-  {
-    label: 'May',
-    value: 5,
-  },
-  {
-    label: 'June',
-    value: 6,
-  },
-  {
-    label: 'July',
-    value: 7,
-  },
-  {
-    label: 'August',
-    value: 8,
-  },
-  {
-    label: 'September',
-    value: 9,
-  },
-  {
-    label: 'October',
-    value: 10,
-  },
-  {
-    label: 'November',
-    value: 11,
-  },
-  {
-    label: 'December',
-    value: 12,
-  }
-  ]
-
-export const DaysOptions = [
-{
-  label: 'Poniedziałek',
-  value: 1,
-},
-{
-  label: 'Wtorek',
-  value: 2,
-},
-{
-  label: 'Środa',
-  value: 3,
-},
-{
-  label: 'Czwartek',
-  value: 4,
-},
-{
-  label: 'Piątek',
-  value: 5,
-},
-{
-  label: 'Sobota',
-  value: 6,
-},
-{
-  label: 'Niedziela',
-  value: 7,
-},
-]
-
-export const DaysOptionsEN = [
-  {
-    label: 'Monday',
-    value: 1,
-  },
-  {
-    label: 'Tuesday',
-    value: 2,
-  },
-  {
-    label: 'Wednesday',
-    value: 3,
-  },
-  {
-    label: 'Thursday',
-    value: 4,
-  },
-  {
-    label: 'Friday',
-    value: 5,
-  },
-  {
-    label: 'Saturday',
-    value: 6,
-  },
-  {
-    label: 'Sunday',
-    value: 7,
-  },
-]
 
 export default function ScreenEditTask({navigation}){
 
@@ -226,24 +45,6 @@ export default function ScreenEditTask({navigation}){
   const [date, setTaskDate] = useState(new Date());
   const [showDate, setShowDate] = useState(false);
   const [showTime, setShowTime] = useState(false);
-
-  const [TaskReccStartDate, setTaskStartDate] = useState(new Date());
-  const [showStartDate, setShowStartDate] = useState(false);
-  const [TaskReccEndDate, setTaskEndDate] = useState(new Date());
-  const [showEndDate, setShowEndDate] = useState(false);
-
-  
-  const [Repeat, setRepeat] = useState(null);
-  const [showRepeat, setShowRepeat] = useState(false);
-  const [RepeatOptionsValue, setRepeatOptions] = useState(RepeatOptions);
-  
-  const [MonthsRepeat, setMonthsRepeat] = useState([])
-  const [showMonthsRepeat, setShowMonthsRepeat] = useState(false);
-  const [MonthsRepeatValue, setMonthsRepeatOptions] = useState(MonthsOptions);
-  
-  const [DaysRepeat, setDaysRepeat] = useState([])
-  const [showDaysRepeat, setShowDaysRepeat] = useState(false);
-  const [DaysRepeatValue, setDaysRepeatOptions] = useState(DaysOptions);
 
   const { tasks, taskID } = useSelector(state => state.taskReducer);
   const { settings } = useSelector(state => state.taskReducer);
@@ -310,33 +111,8 @@ async function onCreateTriggerNotification(date, taskID) {
     setTaskDate(currentDate);
   };
 
-  // DO ZADAŃ CYKLICZNYCH
-  const SetShow = () => {
-    if (isTaskRecc)
-      setTaskRecc(false);
-    else
-      setTaskRecc(true);
-      setShowRepeat(false);
-      setShowMonthsRepeat(false);
-      setShowWeekRepeat(false);
-      setShowDaysRepeat(false);
-  }
-
-  const onStartDateChange = (event, selectedDate) => {
-    const currentDate = selectedDate || new Date(date);
-    setShowStartDate(false);
-    setTaskStartDate(currentDate);
-  };
-  
-  const onEndDateChange = (event, selectedDate) => {
-    const currentDate = selectedDate || new Date(date);
-    setShowEndDate(false);
-    setTaskEndDate(currentDate);
-  };
-
   useEffect(() => {
     getTask();
-    console.log(taskID)
   }, [])
 
   // pobierz zadanie
@@ -488,11 +264,7 @@ const showConfirmDialogUpdate = ( title, isrecc ) => {
       title,
       [
         {
-          text: "TAK, WSZYSTKIE",
-          onPress: () => {updateTaskRecc()},
-        },
-        {
-          text: "TYLKO TE",
+          text: "TAK",
           onPress: () => {updateTask()},
           style: "cancel"
         },
@@ -505,11 +277,7 @@ const showConfirmDialogUpdate = ( title, isrecc ) => {
       title,
       [
         {
-          text: "YES, ALL",
-          onPress: () => {updateTaskRecc()},
-        },
-        {
-          text: "ONLY THIS",
+          text: "YES",
           onPress: () => {updateTask()},
           style: "cancel"
         },
@@ -582,64 +350,19 @@ const showConfirmDialogUpdate = ( title, isrecc ) => {
       }
   }
 
-const updateTaskRecc = () => {
-  let newTasks = [];
-  newTasks = [...tasks];
-  const reccTasksWithSameID = tasks.filter(task => task.TaskReccID === taskReccID);
-  for(let i = 0; i < reccTasksWithSameID.length; i++){
-    var time = 60000;
-    if (i == 0){
-      var nextDate = getTaskDate(date) - 3600000 + time;
-    }
-    else{
-      nextDate += time;
-    }
-    
-      var Task ={
-        ID: reccTasksWithSameID[i].ID,
-        Title: title,
-        Description: description,
-        IsTaskRecc: reccTasksWithSameID[i].IsTaskRecc,
-        TaskReccID: taskReccID,
-        Date: toLocaleISOString(new Date(nextDate)),
-        Done: done,
-        Priority: priority,
-      }
-      const index = tasks.findIndex(task => task.ID === reccTasksWithSameID[i].ID)
-      newTasks[index] = Task;
-      if (reccTasksWithSameID[i].done === false && getTaskDate(new Date(nextDate)) > new Date(Date.now() + 3600000))
-        onCreateTriggerNotification(new Date(nextDate), reccTasksWithSameID[i].ID)
-      else
-        onDeleteNotification(reccTasksWithSameID[i].ID.toString())
-    }
-    try{
-      AsyncStorage.setItem('Tasks', JSON.stringify(newTasks))
-      .then(() => {
-        {settings.Language == 1 ? Alert.alert('Edytowano zadanie cykliczne', title) : Alert.alert('Reccuring Task has been edited', title)};
-        dispatch(setTasks(newTasks));
-        navigation.goBack();
-      }
-      )
-      .catch(err => console.log(err))
-    }
-    catch(error){
-      console.log(error);
-    }
-  }
-
   // ustaw zadanie
   const setTask = () => {
     if(title.length == 0){
       {settings.Language == 1 ? Alert.alert('Niepoprawna nazwa','Pole Nazwa nie może być puste!') : Alert.alert('Invalid Title','The Title field cannot be empty!')};
     }
-    else if(getTaskDate(date) < new Date(Date.now() + 3600000)){ //do Date.now() trzeba też dodać godzinę
+    else if(getTaskDate(date) < new Date(Date.now())){ //do Date.now() trzeba też dodać godzinę
       if(settings.Language == 1)
       {
         Alert.alert('Niepoprawna data przypomnienia', 'Wybrana data przypomnienia wygasła, czy mimo to chcesz kontynować?',
         [
           {
             text: "TAK",
-            onPress: (showConfirmDialogUpdate( title )),
+            onPress: (showConfirmDialogUpdate( title, isrecc )),
             style: "cancel"
           },
           { text: "NIE" }
@@ -650,7 +373,7 @@ const updateTaskRecc = () => {
         [
           {
             text: "YES",
-            onPress: (showConfirmDialogUpdate( title )),
+            onPress: (showConfirmDialogUpdate( title, isrecc )),
             style: "cancel"
           },
           { text: "NO" }
@@ -661,29 +384,6 @@ const updateTaskRecc = () => {
       showConfirmDialogUpdate( title );
     }
   }
-
- /* const SetTaskCheck = () => {
-    if (isTaskRecc == false)
-      setTask();
-    else
-      if(Repeat == 1)
-      {
-        date = new Date(TaskReccStartDate)
-        let tempdate = getTaskDate(date)
-        let tempID = taskID
-        while (tempdate <= getTaskDate(TaskReccEndDate))
-        //for (let i = 0; i < 10; i++ )
-        {
-          taskID = tempID
-          date = new Date(tempdate)
-          console.log(date)
-          console.log(taskID)
-          setTask();
-          tempdate += 24 * 60 * 60 * 1000
-          tempID += 1
-        }
-      }
-  }*/
 
   return(
     <View style={settings.DarkMode == false ? styles.container : styles.container_Dark}>
@@ -829,7 +529,7 @@ const updateTaskRecc = () => {
       <View style={styles.Buttons}>
         <TouchableOpacity 
           style={styles.EditTask}
-          onPress={() => showConfirmDialogUpdate( title, isTaskRecc )}
+          onPress={() => setTask( title, isTaskRecc )}
           >
           <Text style={styles.ButtonAdd}>{settings.Language == 1 ? 'Edytuj' : 'Edit'}</Text>
         </TouchableOpacity>

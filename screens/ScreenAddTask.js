@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Text, View, TouchableOpacity, StatusBar, TextInput, Alert, ScrollView, Linking, Image} from 'react-native';
+import { Text, View, TouchableOpacity, StatusBar, TextInput, Alert, ScrollView, Linking, } from 'react-native';
 import Checkbox from 'expo-checkbox';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useDispatch, useSelector } from 'react-redux';
@@ -10,12 +10,90 @@ import notifee, { AndroidImportance, TimestampTrigger, TriggerType} from '@notif
 
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 
-import {pad, toLocaleISOString, getTaskDate,
-        RepeatOptions, MonthsOptions, DaysOptions} from './ScreenEditTask';
+import {pad, toLocaleISOString, getTaskDate } from './ScreenEditTask';
 
 import { setNextID } from './ScreenMain';
 
 import { styles }from '../GlobalStyle';
+
+// DO ZADAŃ CYKLICZNYCH
+const RepeatOptionsPL = [
+  {
+    label: 'Codziennie',
+    value: 1,
+  },
+  {
+    label: 'Co 2 dni',
+    value: 2,
+  },
+  {
+    label: 'Co tydzień',
+    value: 3,
+  },
+  {
+    label: 'Co 2 tygodnie',
+    value: 4,
+  },
+  {
+    label: 'Co miesiąc',
+    value: 5,
+  },
+  {
+    label: 'Co 2 miesiące',
+    value: 6,
+  },
+  {
+    label: 'Co 3 miesiące',
+    value: 7,
+  },
+  {
+    label: 'Co pół roku',
+    value: 8,
+  },
+  {
+    label: 'Co rok',
+    value: 9,
+  },
+  ]
+  
+  const RepeatOptionsEN = [
+    {
+      label: 'Every day',
+      value: 1,
+    },
+    {
+      label: 'Every other day',
+      value: 2,
+    },
+    {
+      label: 'Every week',
+      value: 3,
+    },
+    {
+      label: 'Every other week',
+      value: 4,
+    },
+    {
+      label: 'Every month',
+      value: 5,
+    },
+    {
+      label: 'Every other month',
+      value: 6,
+    },
+    {
+      label: 'Every 3 months',
+      value: 7,
+    },
+    {
+      label: 'Every 6 months',
+      value: 8,
+    },
+    {
+      label: 'Every year',
+      value: 9,
+    },
+    ]
 
 export default function ScreenAddTask({navigation}){
 
@@ -40,7 +118,6 @@ export default function ScreenAddTask({navigation}){
   
   const [Repeat, setRepeat] = useState(1);
   const [showRepeat, setShowRepeat] = useState(false);
-  const [RepeatOptionsValue, setRepeatOptions] = useState(RepeatOptions);
 
   // zaplanuj powiadomienie
 async function onCreateTriggerNotification(date, taskID) {
@@ -133,15 +210,6 @@ await notifee.createTriggerNotification(
     setTaskDate(currentDate);
   };
 
-   // DO ZADAŃ CYKLICZNYCH
-  const SetShow = () => {
-    if (isTaskRecc)
-      setTaskRecc(false);
-    else
-      setTaskRecc(true);
-      setShowRepeat(false);
-  }
-
   const onStartDateChange = (event, selectedDate) => {
     const currentDate = selectedDate || new Date(date);
     setShowStartDate(false);
@@ -185,7 +253,7 @@ await notifee.createTriggerNotification(
         newTasks.push(Task);
         AsyncStorage.setItem('Tasks', JSON.stringify(newTasks))
         .then(() => {
-            if (getTaskDate(date) > new Date(Date.now() + 3600000))
+            if (getTaskDate(date) > new Date(Date.now()))
               onCreateTriggerNotification(new Date(date), taskID)
             {settings.Language == 1 ? Alert.alert('Nowe zadanie', title) : Alert.alert('New Task', title)};
             dispatch(setTasks(newTasks));
@@ -198,14 +266,62 @@ await notifee.createTriggerNotification(
       }
     }
     else{
-      var time = 60000;
-      for (let i = 0; i < 3; i++){
-        if (i == 0){
+      var time;
+      switch(Repeat){
+        case 1:
+          time = 86400000;
+          break;
+        case 2:
+          time = 86400000 * 2;
+          break;
+        case 3:
+          time = 86400000 * 7;
+          break;
+        case 4:
+          time = 86400000 * 14;
+          break;
+        case 5:
+          time = 1;
+          break;
+        case 6:
+          time = 2;
+          break;   
+        case 7:
+          time = 3;
+          break;
+        case 8:
+          time = 6;
+          break;
+        case 9:
+          time = 12;
+          break;
+        default:
+          time = 0;
+          break;
+      }
+      var start = getTaskDate(TaskReccStartDate);
+      if(Repeat > 0 && Repeat < 5){
+        var end = getTaskDate(TaskReccEndDate) - time - 60000;
+      }
+      else{
+        var tempEnd = new Date(TaskReccEndDate.setMonth(TaskReccEndDate.getMonth() - time));
+        var end = getTaskDate(tempEnd) - 60000;
+      }
+      while (start < end){
+        if (start == getTaskDate(TaskReccStartDate)){
           var nextReccID = setNextID(newTasks, 'RECCID');
-          var nextDate = getTaskDate(date) - 3600000 + time;
+          var nextDate = getTaskDate(date) - 60000;
+          var tempDate = new Date(date.setMonth(date.getMonth()));
         }
         else{
-          nextDate += time;
+          if(Repeat > 0 && Repeat < 5){
+            nextDate += time;
+          }
+          else{
+            var nextTempDate = new Date(tempDate.setMonth(tempDate.getMonth() + time));
+            var nextDate = getTaskDate(nextTempDate);
+            var tempDate = nextTempDate;
+          }
         }
         var nextID = setNextID(newTasks, 'ID');
         Task = {
@@ -218,17 +334,23 @@ await notifee.createTriggerNotification(
           Done: false,
           Priority: priority,
         }
-        if (getTaskDate(new Date(nextDate)) > new Date(Date.now() + 3600000))
+        if (getTaskDate(new Date(nextDate)) > new Date(Date.now()))
           onCreateTriggerNotification(new Date(nextDate), nextID)
         newTasks.push(Task);
+        start = nextDate;
       }
       console.log(newTasks)
       try{
       AsyncStorage.setItem('Tasks', JSON.stringify(newTasks))
       .then(() => {
+          if(newTasks.length == tasks.length){
+            {settings.Language == 1 ? Alert.alert('Zadanie cykliczne nie zostało dodane', 'Wybierz poprawną datę rozpoczęcia i zakończenia') : Alert.alert('New Reccuring Task has not been added', 'Select correct start and end date')};
+          }
+          else{
           {settings.Language == 1 ? Alert.alert('Nowe zadanie cykliczne', title) : Alert.alert('New Reccuring Task', title)};
           dispatch(setTasks(newTasks));
           navigation.goBack();
+          }
        })
       .catch(err => console.log(err))
         }
@@ -273,50 +395,6 @@ await notifee.createTriggerNotification(
     }
   }
 
-  /*
-  const setTaskRecurring = () => {
-      if(title.length == 0){
-        Alert.alert('Niepoprawna nazwa','Pole nazwa nie może być puste!');
-      }
-      else if(getTaskDate(date) - 60000 < new Date(Date.now() + 3600000)){ //dodaj godzinę i odejmij 1 minutę, do Date.now() trzeba też dodać godzinę
-        Alert.alert('Niepoprawna data przypomnienia', 'Należy wybrać datę przypomnienia co najmniej 1 minutę póżniej niż aktualna godzina!');
-      }
-      else{
-        for (let index = 0; index < 4; index++) {
-          try{
-            var Task = {
-              ID: taskID,
-              Title: title,
-              Description: description,
-              IsTaskRecc: isTaskRecc,
-              Date: typeof date == "string" ? date : toLocaleISOString(date),
-              Done: false,
-              Priority: priority,
-            }
-            
-            let newTasks = [...tasks, Task];
-    
-            AsyncStorage.setItem('Tasks', JSON.stringify(newTasks))
-            .then(() => {
-              dispatch(setTasks(newTasks));
-              //Alert.alert('Nowe zadanie', title);
-              //onCreateTriggerNotification()
-              //navigation.goBack();
-              setTaskDate(date.setHours(date.getHours() + 24));
-              //setTaskDate(new Date(new Date(date).getTime() + 60 * 60 * 24 * 1000));
-            })
-            .catch(err => console.log(err))
-          }
-          catch(error){
-            console.log(error);
-          }
-        }
-      }
-  //Alert.alert('Nowe zadanie', title);
-  //navigation.goBack();
-}
-*/
-
   return(
     <View style={settings.DarkMode == false ? styles.container : styles.container_Dark}>
       <StatusBar barStyle = "auto" />
@@ -346,9 +424,114 @@ await notifee.createTriggerNotification(
           />
         <Text style={[styles.TaskLabel, {color: settings.DarkMode == false ? 'black' : 'white'}]}>{settings.Language == 1 ?'  Cykliczne' : '  Reccuring'}</Text>
       </Text>
+      {isTaskRecc ?
+        <View>
+          <View style={styles.DateHour}>
+            <Text style={[styles.TaskLabel, {color: settings.DarkMode == false ? 'black' : 'white'}]}>{settings.Language == 1 ? 'Dzień rozpoczęcia' : 'Start Day'}</Text>
+            <Text style={[styles.TaskLabel, {color: settings.DarkMode == false ? 'black' : 'white'}]}>{settings.Language == 1 ? 'Dzień zakończenia' : 'End Day'}</Text>
+          </View>
+          <View style={settings.DarkMode == false ? [styles.DateHourButton,{paddingRight: 20}] : [styles.DateHourButton_Dark,{paddingRight: 20}]}>
+            {showStartDate ?
+              <View>
+                <TouchableOpacity
+                  onPress={() => setShowStartDate(true)}>
+                  <Text style = {[styles.DateHourText, {color: settings.DarkMode == false ? 'black' : 'white'}]}>
+                    <FontAwesome5
+                      name='calendar-day'
+                      size={30} /> {pad(new Date(TaskReccStartDate).getDate()) + "/" + pad(new Date(TaskReccStartDate).getMonth() + 1) + "/" + new Date(TaskReccStartDate).getFullYear()}
+                  </Text>
+                </TouchableOpacity>
+                <DateTimePicker
+                  value={new Date(TaskReccStartDate)}
+                  mode={"date"}
+                  minimumDate={Date.now()}
+                  onChange={onStartDateChange} />
+              </View>
+              :
+              <TouchableOpacity
+                onPress={() => setShowStartDate(true)}>
+                <Text style = {[styles.DateHourText, {color: settings.DarkMode == false ? 'black' : 'white'}]}>
+                  <FontAwesome5
+                    name='calendar-day'
+                    size={30} /> {pad(new Date(TaskReccStartDate).getDate()) + "/" + pad(new Date(TaskReccStartDate).getMonth() + 1) + "/" + new Date(TaskReccStartDate).getFullYear()}
+                </Text>
+              </TouchableOpacity>}
+            {showEndDate ?
+              <View>
+                <TouchableOpacity
+                  onPress={() => setShowEndDate(true)}>
+                  <Text style = {[styles.DateHourText, {color: settings.DarkMode == false ? 'black' : 'white'}]}>
+                    <FontAwesome5
+                      name='calendar-day'
+                      size={30} /> {pad(new Date(TaskReccEndDate).getDate()) + "/" + pad(new Date(TaskReccEndDate).getMonth() + 1) + "/" + new Date(TaskReccEndDate).getFullYear()}
+                  </Text>
+                </TouchableOpacity>
+                <DateTimePicker
+                  value={new Date(TaskReccEndDate)}
+                  mode={"date"}
+                  minimumDate={new Date(TaskReccStartDate)}
+                  onChange={onEndDateChange} />
+              </View>
+              :
+              <TouchableOpacity
+                onPress={() => setShowEndDate(true)}>
+                <Text style = {[styles.DateHourText, {color: settings.DarkMode == false ? 'black' : 'white'}]}>
+                  <FontAwesome5
+                    name='calendar-day'
+                    size={30} /> {pad(new Date(TaskReccEndDate).getDate()) + "/" + pad(new Date(TaskReccEndDate).getMonth() + 1) + "/" + new Date(TaskReccEndDate).getFullYear()}
+                </Text>
+              </TouchableOpacity>
+            }
+          </View>
+            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+            <Text style={[styles.TaskLabel, {color: settings.DarkMode == false ? 'black' : 'white'}]}>{settings.Language == 1 ? 'Powtarzaj  ' : 'Repeat  '}</Text>
+                <DropDownPicker
+                  zIndex={5000}
+                  placeholder="Wybierz opcje powtarzania"
+                  containerStyle={{width: '70%', marginTop: 10}}
+                  open={showRepeat}
+                  value={Repeat}
+                  items={settings.Language == 1 ? RepeatOptionsPL : RepeatOptionsEN}
+                  setOpen={setShowRepeat}
+                  setValue={setRepeat}
+                  theme={settings.DarkMode == false ? "LIGHT" : "DARK"}
+                  listMode='SCROLLVIEW'
+                />
+            </View>
+          <View style={{flexDirection: 'row', borderBottomWidth: 1}}>
+          <Text style={[styles.TaskLabel, {color: settings.DarkMode == false ? 'black' : 'white'}]}>{settings.Language == 1 ? 'O godzinie  ' : 'At hour  '}</Text>
+            {showTime ?
+              <View>
+                <TouchableOpacity 
+                  onPress={() => setShowTime(true)}>
+                    <Text style = {[styles.DateHourText, {marginTop: 7, marginBottom: 10, color: settings.DarkMode == false ? 'black' : 'white'}]}>
+                    <FontAwesome5
+                      name = 'clock'
+                      size = {30} /> {pad(new Date(date).getHours()) + ":" + pad(new Date(date).getMinutes())}
+                    </Text>
+                </TouchableOpacity>
+                  <DateTimePicker
+                    value={new Date(date)}
+                    mode="time"
+                    onChange={onDateChange}     
+                  />
+                </View>
+                  :
+                  <TouchableOpacity 
+                  onPress={() => setShowTime(true)}>
+                    <Text style = {[styles.DateHourText, {marginTop: 7, marginBottom: 10, color: settings.DarkMode == false ? 'black' : 'white'}]}>
+                    <FontAwesome5
+                      name = 'clock'
+                      size = {30} /> {pad(new Date(date).getHours()) + ":" + pad(new Date(date).getMinutes())}
+                    </Text>
+                  </TouchableOpacity>
+            }          
+          </View>
+        </View>
+      :
       <View>
         <View style={styles.DateHour}>
-          <Text style={[styles.TaskLabel, {color: settings.DarkMode == false ? 'black' : 'white'}]}>{settings.Language == 1 ? 'Data' : 'Date'}</Text>
+          <Text style={[styles.TaskLabel, {color: settings.DarkMode == false ? 'black' : 'white'}]}>{settings.Language == 1 ? 'Dzień' : 'Day'}</Text>
           <Text style={[styles.TaskLabel, {color: settings.DarkMode == false ? 'black' : 'white'}]}>{settings.Language == 1 ? 'Godzina' : 'Hour'}</Text>
         </View>
       <View style={settings.DarkMode == false ? styles.DateHourButton : styles.DateHourButton_Dark}>
@@ -411,6 +594,7 @@ await notifee.createTriggerNotification(
         }
         </View>
       </View>
+      }
       <Text style={[styles.TaskLabel, {color: settings.DarkMode == false ? 'black' : 'white'}]}>{settings.Language == 1 ? 'Priorytet' : 'Priority'}</Text>
       <View style={styles.priority_bar}>
         <TouchableOpacity

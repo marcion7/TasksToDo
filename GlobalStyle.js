@@ -118,13 +118,6 @@ import { StyleSheet } from 'react-native';
       padding: 5,
       borderColor: 'grey'
     },
-    StartEndDatesButton: {
-      flexDirection: 'row',
-      justifyContent: 'space-around',
-      marginTop: 5,
-      paddingRight: 10,
-      borderBottomWidth: 1,
-    },
     DateHourText: {
       fontSize: 20,
       fontWeight: '500',
