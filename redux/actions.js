@@ -22,12 +22,3 @@ export const setSettings = settings => dispatch => {
         payload: settings,
     });
 };
-
-export const groupBy = (array, key) => {
-    return array.reduce((result, currentValue) => {(
-     result[currentValue[key].split('T')[0]] = result[currentValue[key].split('T')[0]] || []).push(
-        currentValue
-      );
-      return result;
-    }, {});
-};
