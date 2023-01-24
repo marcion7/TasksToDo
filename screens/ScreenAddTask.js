@@ -121,10 +121,11 @@ export default function ScreenAddTask({navigation}){
 
   // zaplanuj powiadomienie
 async function onCreateTriggerNotification(date, taskID) {
-  const trigger: TimestampTrigger = {
-    type: TriggerType.TIMESTAMP,
-    timestamp: date.getTime(),
-  };
+  date = new Date(toLocaleISOString(date));
+    const trigger: TimestampTrigger = {
+      type: TriggerType.TIMESTAMP,
+      timestamp: date.getTime() - 3600000,
+    };
 
   if(settings.Language == 1){
     var name = 'Powiadomienia o zadaniach ';
@@ -143,7 +144,6 @@ async function onCreateTriggerNotification(date, taskID) {
   importance: AndroidImportance.HIGH
 });
 
-// Create a trigger notification
 await notifee.createTriggerNotification(
   {
     id: taskID.toString(),
@@ -243,7 +243,7 @@ await notifee.createTriggerNotification(
       Description: description,
       IsTaskRecc: isTaskRecc,
       TaskReccID: null,
-      Date: typeof date == "string" ? date : toLocaleISOString(date),
+      Date: toLocaleISOString(date),
       Done: false,
       Priority: priority,
     }

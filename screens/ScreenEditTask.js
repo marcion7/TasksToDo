@@ -22,7 +22,7 @@ export function toLocaleISOString(date) {
       '-' + pad(date.getDate()) +
       'T' + pad(date.getHours()) +
       ':' + pad(date.getMinutes()) +
-      ':00';
+      ':00.000Z';
 }
 
 export default function ScreenEditTask({navigation}){
@@ -44,9 +44,10 @@ export default function ScreenEditTask({navigation}){
 
 // zaplanuj powiadomienie
 async function onCreateTriggerNotification(date, taskID) {
+  date = new Date(toLocaleISOString(date));
     const trigger: TimestampTrigger = {
       type: TriggerType.TIMESTAMP,
-      timestamp: date.getTime(),
+      timestamp: date.getTime() - 3600000,
     };
 
     if(settings.Language == 1){
@@ -66,7 +67,6 @@ async function onCreateTriggerNotification(date, taskID) {
     importance: AndroidImportance.HIGH
   });
 
-  // Create a trigger notification
   await notifee.createTriggerNotification(
     {
       id: taskID.toString(),
@@ -75,7 +75,7 @@ async function onCreateTriggerNotification(date, taskID) {
       android: {
         channelId: channelId,
         color: '#2d53a6',
-        largeIcon: priority==1 ? require('../Icons/priorityL.png') : priority==2 ? require('../Icons/priorityM.png') : require('../Icons/priorityM.png'),
+        largeIcon: priority==1 ? require('../Icons/priorityL.png') : priority==2 ? require('../Icons/priorityM.png') : require('../Icons/priorityH.png'),
         actions: [
           {
             title: view,
@@ -120,7 +120,6 @@ async function onCreateTriggerNotification(date, taskID) {
       setTaskRecc(Task.IsTaskRecc);
       setTaskReccID(Task.TaskReccID);
       setTaskDate(correctData)
-      console.log(correctData)
       setDone(Task.Done);
       setPriority(Task.Priority);
     }
