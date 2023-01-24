@@ -22,7 +22,7 @@ export function toLocaleISOString(date) {
       '-' + pad(date.getDate()) +
       'T' + pad(date.getHours()) +
       ':' + pad(date.getMinutes()) +
-      ':' + pad(date.getSeconds());
+      ':00';
 }
 
 export default function ScreenEditTask({navigation}){
@@ -120,6 +120,7 @@ async function onCreateTriggerNotification(date, taskID) {
       setTaskRecc(Task.IsTaskRecc);
       setTaskReccID(Task.TaskReccID);
       setTaskDate(correctData)
+      console.log(correctData)
       setDone(Task.Done);
       setPriority(Task.Priority);
     }
