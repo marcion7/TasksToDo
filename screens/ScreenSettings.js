@@ -46,18 +46,6 @@ export default function ScreenSettings(){
     },
     ]
 
-    /*
-    const getData = async () => {
-      try {
-        const jsonValue = await AsyncStorage.getItem('Settings')
-        const val = JSON.parse(jsonValue);
-        console.log(val);
-      } catch(e) {
-        console.log(error);
-      }
-    }
-    */
-
     const setSetting = () => {
       try{
         var Settings = {

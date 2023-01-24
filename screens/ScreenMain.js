@@ -2,14 +2,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
 import { Text, View, TouchableOpacity, StatusBar, Alert, SectionList } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { setTaskID, setTasks, groupBy, setSettings } from '../redux/actions';
+import { setTaskID, setTasks, setSettings } from '../redux/actions';
 import { Picker } from '@react-native-picker/picker';
 import * as Progress from 'react-native-progress';
 import notifee from '@notifee/react-native';
 
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
-
-//import { tasksToSetDone } from '../index';
 
 import { styles }from '../GlobalStyle';
 
@@ -52,12 +50,21 @@ export const setNextID = (array, IDtype) => {
       id++;
     }
     else{
-      ids.add(id);
       break;
     }
   }
   return id;
 }
+
+// grupuj zadania po dniu daty przypomnienia
+export const groupByDate = (array) => {
+  return array.reduce((result, currentValue) => {(
+   result[currentValue['Date'].split('T')[0]] = result[currentValue['Date'].split('T')[0]] || []).push(
+      currentValue
+    );
+    return result;
+  }, {});
+};
 
 export default function ScreenMain( {navigation} ){
 
@@ -70,8 +77,8 @@ export default function ScreenMain( {navigation} ){
   const [FilterDone, setFilterDone] = useState('');
   const [TasksDateFilterIndex, setTasksDateFilterIndex] = useState(0);
 
-  var myModule = require('../index');
-  var tasksToSetDone = myModule.tasksToSetDone;
+  var index = require('../index');
+  var tasksToSetDone = index.tasksToSetDone;
 
   useEffect(() => {
     setTaskAsDone(tasksToSetDone);
@@ -232,13 +239,13 @@ const showConfirmDialog = ( id, title, isrecc, reccid ) => {
 
  const filterTasks = () => {
   if(FilterPriority !== '' && FilterDone !== '')
-    filtered = groupBy(tasks.filter(task => task.Done === FilterDone && task.Priority === FilterPriority), 'Date')
+    filtered = groupByDate(tasks.filter(task => task.Done === FilterDone && task.Priority === FilterPriority))
   else if(FilterPriority !== '')
-    filtered = groupBy(tasks.filter(task => task.Priority === FilterPriority), 'Date');
+    filtered = groupByDate(tasks.filter(task => task.Priority === FilterPriority));
   else if(FilterDone !== '')
-    filtered = groupBy(tasks.filter(task => task.Done === FilterDone), 'Date');
+    filtered = groupByDate(tasks.filter(task => task.Done === FilterDone));
   else
-    filtered = groupBy(tasks, 'Date');
+    filtered = groupByDate(tasks);
   return Object.keys(filtered).map((key)=> ({key: key, data: filtered[key]}));
 }
 
@@ -261,7 +268,7 @@ for (let i = 0; i < filteredTasks.length; i++){
    }
   }
 
-  activeTasks = groupBy(activeTasks, 'Date')
+  activeTasks = groupByDate(activeTasks)
   activeTasks = Object.keys(activeTasks).map((key)=> ({key: key, data: activeTasks[key]}))
 
   var oldTasks = []
@@ -274,7 +281,7 @@ for (let i = 0; i < filteredTasks.length; i++){
     }
    }
 
-   oldTasks = groupBy(oldTasks, 'Date')
+   oldTasks = groupByDate(oldTasks)
    oldTasks = Object.keys(oldTasks).map((key)=> ({key: key, data: oldTasks[key]}))
 
   function setSelectedTasks (){

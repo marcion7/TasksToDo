@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Text, View, TouchableOpacity, StatusBar, TextInput, Alert, ScrollView, Linking, } from 'react-native';
+import { Text, View, TouchableOpacity, StatusBar, TextInput, Alert, ScrollView, Linking } from 'react-native';
 import Checkbox from 'expo-checkbox';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useDispatch, useSelector } from 'react-redux';
@@ -10,11 +10,11 @@ import notifee, { AndroidImportance, TimestampTrigger, TriggerType} from '@notif
 
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 
-import {pad, toLocaleISOString, getTaskDate } from './ScreenEditTask';
+import {pad, toLocaleISOString } from './ScreenEditTask';
 
 import { setNextID } from './ScreenMain';
 
-import { styles }from '../GlobalStyle';
+import { styles } from '../GlobalStyle';
 
 // DO ZADAŃ CYKLICZNYCH
 const RepeatOptionsPL = [
@@ -253,7 +253,7 @@ await notifee.createTriggerNotification(
         newTasks.push(Task);
         AsyncStorage.setItem('Tasks', JSON.stringify(newTasks))
         .then(() => {
-            if (getTaskDate(date) > new Date(Date.now()))
+            if (date.getTime() > new Date(Date.now()))
               onCreateTriggerNotification(new Date(date), taskID)
             {settings.Language == 1 ? Alert.alert('Nowe zadanie', title) : Alert.alert('New Task', title)};
             dispatch(setTasks(newTasks));
@@ -299,18 +299,12 @@ await notifee.createTriggerNotification(
           time = 0;
           break;
       }
-      var start = getTaskDate(TaskReccStartDate);
-      if(Repeat > 0 && Repeat < 5){
-        var end = getTaskDate(TaskReccEndDate) - time - 60000;
-      }
-      else{
-        var tempEnd = new Date(TaskReccEndDate.setMonth(TaskReccEndDate.getMonth() - time));
-        var end = getTaskDate(tempEnd) - 60000;
-      }
-      while (start < end){
-        if (start == getTaskDate(TaskReccStartDate)){
+      var start = TaskReccStartDate.getTime();
+      var end = TaskReccEndDate.getTime() - 60000;
+      while (start <= end){
+        if (start == TaskReccStartDate.getTime() && nextDate != date.getTime()){
           var nextReccID = setNextID(newTasks, 'RECCID');
-          var nextDate = getTaskDate(date) - 60000;
+          var nextDate = date.getTime();
           var tempDate = new Date(date.setMonth(date.getMonth()));
         }
         else{
@@ -319,7 +313,7 @@ await notifee.createTriggerNotification(
           }
           else{
             var nextTempDate = new Date(tempDate.setMonth(tempDate.getMonth() + time));
-            var nextDate = getTaskDate(nextTempDate);
+            var nextDate = nextTempDate.getTime();
             var tempDate = nextTempDate;
           }
         }
@@ -334,12 +328,11 @@ await notifee.createTriggerNotification(
           Done: false,
           Priority: priority,
         }
-        if (getTaskDate(new Date(nextDate)) > new Date(Date.now()))
+        if (new Date(nextDate).getTime() > new Date(Date.now()))
           onCreateTriggerNotification(new Date(nextDate), nextID)
         newTasks.push(Task);
         start = nextDate;
       }
-      console.log(newTasks)
       try{
       AsyncStorage.setItem('Tasks', JSON.stringify(newTasks))
       .then(() => {
@@ -365,7 +358,7 @@ await notifee.createTriggerNotification(
     if(title.length == 0){
       {settings.Language == 1 ? Alert.alert('Niepoprawna nazwa','Pole Nazwa nie może być puste!') : Alert.alert('Invalid Title','The Title field cannot be empty!')};
     }
-    else if(getTaskDate(date) < new Date(Date.now() + 3600000)){ //do Date.now() trzeba też dodać godzinę
+    else if(date.getTime() < Date.now()){ //do Date.now() trzeba też dodać godzinę
       if(settings.Language == 1)
       {
         Alert.alert('Niepoprawna data przypomnienia', 'Wybrana data przypomnienia wygasła, czy mimo to chcesz kontynować?',

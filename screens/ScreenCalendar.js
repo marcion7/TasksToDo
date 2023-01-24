@@ -3,9 +3,9 @@ import { Text, View, TouchableOpacity, StatusBar, Alert, SectionList} from 'reac
 import {Calendar, LocaleConfig} from 'react-native-calendars';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useDispatch, useSelector } from 'react-redux';
-import { setTaskID, setTasks, groupBy } from '../redux/actions';
+import { setTaskID, setTasks } from '../redux/actions';
 import * as Progress from 'react-native-progress';
-import {isWhatPercentOf, countDoneTasks, onDeleteNotification} from './ScreenMain';
+import {isWhatPercentOf, countDoneTasks, onDeleteNotification, groupByDate} from './ScreenMain';
 import { styles } from '../GlobalStyle';
 
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
@@ -113,7 +113,7 @@ export default function ScreenCalendar({ navigation }){
   }
 
   const filterTasks = (selectedDate) => {
-    filtered = groupBy(tasks, 'Date');
+    filtered = groupByDate(tasks);
     if (selectedDate !== ''){
       filtered = Object.fromEntries(Object.entries(filtered).filter(([key]) => key.includes(selectedDate)));
     }

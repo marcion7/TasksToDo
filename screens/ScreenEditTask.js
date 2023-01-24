@@ -25,14 +25,6 @@ export function toLocaleISOString(date) {
       ':' + pad(date.getSeconds());
 }
 
-// Data w milisekundach
-export const getTaskDate = (date) => {
-  const d = new Date(date)
-  d.setTime(d.getTime()) // dodać 1 godzinę
-  const dateInMilisec = new Date(d).getTime()
-  return dateInMilisec
-}
-
 export default function ScreenEditTask({navigation}){
 
   const [title, setTitle] = useState('');
@@ -256,36 +248,7 @@ const showConfirmDialogDelete = ( id, title, isrecc, reccid ) => {
 }
 
 // alert o usuwaniu zadania
-const showConfirmDialogUpdate = ( title, isrecc ) => {
-  if(isrecc){
-    {settings.Language == 1 ? 
-      Alert.alert(
-      "Czy chcesz edytować to zadanie cykliczne?",
-      title,
-      [
-        {
-          text: "TAK",
-          onPress: () => {updateTask()},
-          style: "cancel"
-        },
-        { text: "NIE" }
-      ]
-    )
-    :
-    Alert.alert(
-      "Do you want to edit this reccuring task?",
-      title,
-      [
-        {
-          text: "YES",
-          onPress: () => {updateTask()},
-          style: "cancel"
-        },
-        { text: "NO" }
-      ]
-    );}  
-  }
-  else{
+const showConfirmDialogUpdate = ( title ) => {
     {settings.Language == 1 ? 
       Alert.alert(
       "Czy chcesz edytować to zadanie?",
@@ -311,7 +274,7 @@ const showConfirmDialogUpdate = ( title, isrecc ) => {
         },
         { text: "NO" }
       ]
-    );}  
+    );
   }
 }
   
@@ -337,7 +300,7 @@ const showConfirmDialogUpdate = ( title, isrecc ) => {
         .then(() => {
               dispatch(setTasks(newTasks));
               {settings.Language == 1 ? Alert.alert('Edytowano zadanie', title) : Alert.alert('Task has been edited', title)};
-              if (done === false && getTaskDate(date) > new Date(Date.now() + 3600000))
+              if (done === false && date.getTime() > Date.now())
                 onCreateTriggerNotification(date, taskID)
               else
                 onDeleteNotification(taskID.toString())
@@ -355,14 +318,14 @@ const showConfirmDialogUpdate = ( title, isrecc ) => {
     if(title.length == 0){
       {settings.Language == 1 ? Alert.alert('Niepoprawna nazwa','Pole Nazwa nie może być puste!') : Alert.alert('Invalid Title','The Title field cannot be empty!')};
     }
-    else if(getTaskDate(date) < new Date(Date.now())){ //do Date.now() trzeba też dodać godzinę
+    else if(date.getTime() < Date.now()){ //do Date.now() trzeba też dodać godzinę
       if(settings.Language == 1)
       {
         Alert.alert('Niepoprawna data przypomnienia', 'Wybrana data przypomnienia wygasła, czy mimo to chcesz kontynować?',
         [
           {
             text: "TAK",
-            onPress: (showConfirmDialogUpdate( title, isrecc )),
+            onPress: () => {showConfirmDialogUpdate( title )},
             style: "cancel"
           },
           { text: "NIE" }
@@ -373,7 +336,7 @@ const showConfirmDialogUpdate = ( title, isrecc ) => {
         [
           {
             text: "YES",
-            onPress: (showConfirmDialogUpdate( title, isrecc )),
+            onPress: () => {showConfirmDialogUpdate( title )},
             style: "cancel"
           },
           { text: "NO" }

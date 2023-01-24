@@ -24,7 +24,7 @@ import { StyleSheet } from 'react-native';
       position: 'absolute',
       bottom: 30,
       right: 30,
-      width: '17%',
+      width: 65,
       alignItems: 'center',
       borderRadius: 100,
       backgroundColor: 'blue',
@@ -190,10 +190,12 @@ import { StyleSheet } from 'react-native';
       borderColor: '#555555',
       marginVertical: '3%'
     },
+    //ScreenSettings
     iconStyle: {
       width: 20,
       height: 15
     },
+    //ScreenCalendar
     CalendarStyle: {
       textMonthFontSize: 22,
       textMonthFontWeight: 'bold',
