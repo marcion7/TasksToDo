@@ -300,8 +300,8 @@ await notifee.createTriggerNotification(
           break;
       }
       var start = TaskReccStartDate.getTime();
-      var end = TaskReccEndDate.getTime() - 1;
-      while (start <= end){
+      var end = TaskReccEndDate.getTime();
+      while (start < end){
         if (start == TaskReccStartDate.getTime() && nextDate != date.getTime()){
           var nextReccID = setNextID(newTasks, 'RECCID');
           var nextDate = date.getTime();
