@@ -337,7 +337,8 @@ await notifee.createTriggerNotification(
       AsyncStorage.setItem('Tasks', JSON.stringify(newTasks))
       .then(() => {
           if(newTasks.length == tasks.length){
-            {settings.Language == 1 ? Alert.alert('Zadanie cykliczne nie zostało dodane', 'Wybierz poprawną datę rozpoczęcia i zakończenia') : Alert.alert('New Reccuring Task has not been added', 'Select correct start and end date')};
+            {settings.Language == 1 ? Alert.alert('Zadanie cykliczne nie zostało dodane', 'Wybierz poprawną datę rozpoczęcia i zakończenia')
+             : Alert.alert('New Reccuring Task has not been added', 'Select correct start and end date')};
           }
           else{
           {settings.Language == 1 ? Alert.alert('Nowe zadanie cykliczne', title) : Alert.alert('New Reccuring Task', title)};
