@@ -328,7 +328,7 @@ await notifee.createTriggerNotification(
           Done: false,
           Priority: priority,
         }
-        if (new Date(nextDate).getTime() > new Date(Date.now()))
+        if (nextDate > Date.now())
           onCreateTriggerNotification(new Date(nextDate), nextID)
         newTasks.push(Task);
         start = nextDate;
@@ -359,7 +359,7 @@ await notifee.createTriggerNotification(
     if(title.length == 0){
       {settings.Language == 1 ? Alert.alert('Niepoprawna nazwa','Pole Nazwa nie może być puste!') : Alert.alert('Invalid Title','The Title field cannot be empty!')};
     }
-    else if(date.getTime() < Date.now()){ //do Date.now() trzeba też dodać godzinę
+    else if(date.getTime() < Date.now()){
       if(settings.Language == 1)
       {
         Alert.alert('Niepoprawna data przypomnienia', 'Wybrana data przypomnienia wygasła, czy mimo to chcesz kontynować?',
